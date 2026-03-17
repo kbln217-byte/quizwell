@@ -1,0 +1,29 @@
+{
+  "name": "quizwell",
+  "version": "1.0.0",
+  "description": "**表示項目**\r メールアドレス／ パスワード／ ログインボタン",
+  "main": "merge.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kbln217-byte/quizwell.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kbln217-byte/quizwell/issues"
+  },
+  "homepage": "https://github.com/kbln217-byte/quizwell#readme",
+  "devDependencies": {
+    "prisma": "^7.5.0"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.5.0",
+    "pg": "^8.20.0"
+  }
+}
