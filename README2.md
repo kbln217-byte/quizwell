@@ -1,3 +1,23 @@
+# Quiz API
+
+## 概要
+キャリアコンサルタント試験の過去問を解くための学習アプリ。
+
+- 問題一覧・詳細表示
+- 回答送信
+- 正誤判定
+- 前後の問題への遷移
+- 不正解問題の記録（復習用）
+
+---
+
+## 起動方法
+```bash
+npm install
+npm run dev
+
+
+
 model ExamSession {
   id         Int        @id @default(autoincrement())
   examYear   Int
@@ -117,3 +137,28 @@ model WrongQuestion {
   @@unique([userId, questionId])
   @@index([userId, resolvedAt])
 }
+
+
+
+
+# Quiz API
+
+## 起動方法
+npm install
+npm run dev
+
+## テスト
+npm run test
+
+## DB
+npx prisma migrate dev
+npx prisma studio
+
+## API
+POST /users
+POST /answers
+
+## 仕様
+- 回答は UserQuestionAnswer に保存
+- 不正解は WrongQuestion に登録
+- 正解時は WrongQuestion を解決

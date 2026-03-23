@@ -1,29 +1,43 @@
 {
-  "name": "quizwell",
+  "name": "api-practice",
   "version": "1.0.0",
-  "description": "**表示項目**\r メールアドレス／ パスワード／ ログインボタン",
-  "main": "merge.js",
+  "description": "1) REST設計",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/kbln217-byte/quizwell.git"
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/kbln217-byte/quizwell/issues"
-  },
-  "homepage": "https://github.com/kbln217-byte/quizwell#readme",
-  "devDependencies": {
-    "prisma": "^7.5.0"
-  },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.4.0",
+    "@types/pg": "^8.18.0",
+    "@types/supertest": "^7.2.0",
+    "jest": "^30.3.0",
+    "nodemon": "^3.1.14",
+    "prisma": "^7.5.0",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.6",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
   }
 }
