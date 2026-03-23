@@ -131,6 +131,10 @@ function goNext() {
   const nextId = question.value.id + 1
   router.push(`/questions/${nextId}`)
 }
+
+function goToList() {
+  router.push("/questions")
+}
 </script>
 
 <template>
@@ -170,8 +174,9 @@ function goNext() {
         <p v-if="correctChoiceText">正解: {{ correctChoiceText }}</p>
       </div>
 
-      <div v-if="resultMessage" style="margin-top: 16px;">
-        <button @click="goBack">前の問題へ</button>
+      <div v-if="isCorrect !== null" style="margin-top: 16px;">
+        <button @click="goToList">一覧に戻る</button>
+        <button @click="goBack" style="margin-left: 8px;">前の問題へ</button>
         <button @click="goNext" style="margin-left: 8px;">次の問題へ</button>
       </div>
     </div>
