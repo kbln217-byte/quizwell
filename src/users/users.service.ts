@@ -56,14 +56,26 @@ export async function register(input: {
 }) {
   const existingUser = await findByEmail(input.email);
   if (existingUser) {
+    if (existingUser.name === input.name) {
+      return {
+        user: existingUser,
+        isNewUser: false,
+      };
+    }
+
     throw new HttpError(400, "VALIDATION_ERROR", "email already exists");
   }
 
   try {
-    return await createUser({
+    const user = await createUser({
       name: input.name,
       email: input.email,
     });
+
+    return {
+      user,
+      isNewUser: true,
+    };
   } catch (e: any) {
     if (
       e instanceof Prisma.PrismaClientKnownRequestError &&

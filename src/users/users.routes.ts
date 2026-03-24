@@ -26,12 +26,12 @@ usersRouter.post("/", async (req, res, next) => {
       return;
     }
 
-    const user = await service.register({
+    const result = await service.register({
       name: name.trim(),
-      email: email.trim(),
+      email: email.trim().toLowerCase(),
     });
 
-    res.status(201).json({ user });
+    res.status(result.isNewUser ? 201 : 200).json({ user: result.user });
   } catch (e) {
     next(e);
   }

@@ -10,9 +10,19 @@ const message = ref("")
 
 async function submit() {
   try {
+    message.value = ""
+
+    const trimmedName = name.value.trim()
+    const trimmedEmail = email.value.trim()
+
+    if (!trimmedName || !trimmedEmail) {
+      message.value = "名前とメールアドレスを入力してください"
+      return
+    }
+
     const data = await createUser({
-      name: name.value,
-      email: email.value,
+      name: trimmedName,
+      email: trimmedEmail,
     })
 
     console.log("users response:", data)
@@ -39,16 +49,59 @@ async function submit() {
 </script>
 
 <template>
-  <main style="max-width: 480px; margin: 40px auto;">
-    <h1>ユーザー登録</h1>
+  <main class="page-shell">
+    <section class="page-hero register-panel">
+      <div class="page-hero-content">
+        <div>
+          <p class="page-kicker">Quizwell</p>
+          <h1 class="page-title register-title">
+            <span class="register-title-part">キャリコン</span>
+            <span class="register-title-part">学科試験過去問</span>
+          </h1>
+          <p class="page-subtitle">
+            キャリアコンサルタントの試験は3月、7月、11月です。<br />
+            申し込みの締め切りは試験の3か月前です。
+          </p>
+        </div>
+      </div>
+    </section>
 
-    <input v-model="name" placeholder="名前" />
-    <br /><br />
-    <input v-model="email" placeholder="メール" />
-    <br /><br />
+    <section class="page-card form-card register-panel">
+      <div class="section-heading">
+        <p class="section-kicker">Register</p>
+        <h2>ユーザー登録</h2>
+        <p class="section-description">初回は登録され、同じ名前・メールアドレスならそのまま問題一覧へ進みます。</p>
+      </div>
 
-    <button @click="submit">登録</button>
+      <div class="form-stack">
+        <label class="field">
+          <span>名前</span>
+          <input
+            v-model="name"
+            class="input"
+            type="text"
+            placeholder="例: ほしの さくら"
+          />
+        </label>
 
-    <p>{{ message }}</p>
+        <label class="field">
+          <span>メールアドレス</span>
+          <input
+            v-model="email"
+            class="input"
+            type="email"
+            placeholder="例: sakura@example.com"
+          />
+        </label>
+      </div>
+
+      <div class="button-row">
+        <button class="button button-primary" @click="submit">
+          進む
+        </button>
+      </div>
+
+      <p v-if="message" class="message-banner message-banner-warning">{{ message }}</p>
+    </section>
   </main>
 </template>
