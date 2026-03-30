@@ -10,6 +10,7 @@ type Question = {
   body: string
   examSessionId: number
   questionNumber: number
+  flagged: boolean
 }
 
 type Session = {
@@ -42,6 +43,7 @@ const reviewCount = ref(0)
 const reviewLoading = ref(false)
 const RANDOM_SOURCE_SIZE = 200
 const RANDOM_PICK_SIZE = 50
+const flaggedIds = ref<number[]>([])
 
 function goDetail(id: number) {
   router.push({
@@ -125,7 +127,21 @@ async function loadReviewQuestions() {
 
 async function loadQuestions() {
   try {
-    const data = await getQuestions()
+    const rawUserId = localStorage.getItem("userId")
+
+    if (!rawUserId) {
+      questions.value = []
+      return
+    }
+
+    const parsedUserId = Number(rawUserId)
+
+    if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
+      questions.value = []
+      return
+    }
+
+    const data = await getQuestions(parsedUserId)
     questions.value = data.questions
   } catch (error) {
     console.error(error)
@@ -330,6 +346,34 @@ function openRandomQuestions() {
   })
 }
 
+function isFlagged(questionId: number) {
+  return questions.value.find((question) => question.id === questionId)?.flagged ?? false
+}
+
+async function loadFlaggedIds() {
+  try {
+    const rawUserId = localStorage.getItem("userId")
+
+    if (!rawUserId) {
+      flaggedIds.value = []
+      return
+    }
+
+    const parsedUserId = Number(rawUserId)
+
+    if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
+      flaggedIds.value = []
+      return
+    }
+
+    const data = await getFlaggedQuestionIds(parsedUserId)
+    flaggedIds.value = data.questionIds
+  } catch (error) {
+    console.error(error)
+    flaggedIds.value = []
+  }
+}
+
 watch(
   () => [route.query.mode, route.query.sessionId, route.query.ids, sortedSessions.value.length, questions.value.length],
   async ([mode]) => {
@@ -368,7 +412,12 @@ watch(
 )
 
 onMounted(async () => {
-  await Promise.all([loadSessions(), loadQuestions(), loadReviewCount()])
+
+    await Promise.all([
+  loadSessions(),
+  loadQuestions(),
+  loadReviewCount(),
+])
 
   if (route.query.mode === "review") {
     await loadReviewQuestions()
@@ -487,14 +536,18 @@ onMounted(async () => {
         <li v-for="q in displayedQuestions" :key="q.id">
           <button class="question-card" @click="goDetail(q.id)">
             <div class="question-card-top">
-              <span class="question-index">
-                <template v-if="activeMode !== 'session' && q.examSessionId !== null">
-                  {{ getSessionLabel(q.examSessionId) }} 問{{ q.questionNumber }}
-                </template>
-                <template v-else>
-                  問{{ q.questionNumber }}
-                </template>
-              </span>
+<span class="question-index">
+  <span style="margin-right: 6px;">
+    {{ isFlagged(q.id) ? "★" : "☆" }}
+  </span>
+
+  <template v-if="activeMode !== 'session' && q.examSessionId !== null">
+    {{ getSessionLabel(q.examSessionId) }} 問{{ q.questionNumber }}
+  </template>
+  <template v-else>
+    問{{ q.questionNumber }}
+  </template>
+</span>
               <span class="question-arrow">詳細へ</span>
             </div>
             <p class="question-text">{{ q.body }}</p>

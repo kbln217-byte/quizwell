@@ -36,6 +36,9 @@ const correctChoiceLabel = ref("")
 const correctChoiceText = ref("")
 const navigationQuestionIds = ref<number[]>([])
 
+const flagged = ref(false)
+const loadingFlag = ref(false)
+
 const hasAnswered = computed(() => isCorrect.value !== null)
 const feedbackClassName = computed(() => {
   if (isCorrect.value === true) return "feedback-panel feedback-panel-correct"
@@ -52,6 +55,13 @@ const canGoNext = computed(
     currentQuestionIndex.value >= 0 &&
     currentQuestionIndex.value < navigationQuestionIds.value.length - 1
 )
+
+function getStoredUserId() {
+  const rawUserId = localStorage.getItem("userId")
+  const parsedUserId = Number(rawUserId)
+
+  return Number.isInteger(parsedUserId) && parsedUserId > 0 ? parsedUserId : null
+}
 
 function parseRandomQuestionIds(idsQuery: unknown) {
   const rawIds =
@@ -118,6 +128,7 @@ async function loadNavigationContext() {
     navigationQuestionIds.value = filteredQuestions.map((item: { id: number }) => item.id)
   } catch (error) {
     console.error(error)
+
     navigationQuestionIds.value = []
   }
 }
@@ -137,8 +148,10 @@ async function loadQuestion(id: string) {
   isCorrect.value = null
 
   try {
-    const data = await getQuestionById(id)
+    const storedUserId = getStoredUserId()
+    const data = await getQuestionById(id, storedUserId ?? undefined)
     question.value = data.question
+    await fetchFlag()
   } catch (error) {
     console.error(error)
     errorMessage.value = "問題詳細の取得に失敗しました"
@@ -176,17 +189,10 @@ async function answerQuestion() {
       return
     }
 
-    const rawUserId = localStorage.getItem("userId")
+    const parsedUserId = getStoredUserId()
 
-    if (!rawUserId) {
+    if (!parsedUserId) {
       resultMessage.value = "先にユーザー登録をしてください"
-      return
-    }
-
-    const parsedUserId = Number(rawUserId)
-
-    if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
-      resultMessage.value = "保存されたuserIdが不正です"
       return
     }
 
@@ -209,6 +215,58 @@ async function answerQuestion() {
     console.error(error)
     resultMessage.value =
       error instanceof Error ? error.message : "回答送信に失敗しました"
+  }
+}
+
+async function fetchFlag() {
+  const userId = getStoredUserId()
+
+  if (!userId) {
+    flagged.value = false
+    return
+  }
+
+  try {
+    const res = await fetch(
+      `http://localhost:3000/question-flags/${route.params.id}?userId=${userId}`
+    )
+
+    if (!res.ok) {
+      throw new Error("目印の取得に失敗しました")
+    }
+
+    const data = await res.json()
+    flagged.value = Boolean(data.flagged)
+  } catch (error) {
+    console.error(error)
+    flagged.value = false
+  }
+}
+
+async function toggleFlag() {
+  const userId = getStoredUserId()
+
+  if (!userId) {
+    resultMessage.value = "先にユーザー登録をしてください"
+    return
+  }
+
+  loadingFlag.value = true
+
+  try {
+    await fetch(`http://localhost:3000/question-flags/toggle`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId, questionId: Number(route.params.id) }),
+    })
+
+    flagged.value = !flagged.value
+  } catch (error) {
+    console.error(error)
+  } finally {
+    loadingFlag.value = false
   }
 }
 
@@ -244,10 +302,10 @@ function goToList() {
 
 <template>
   <main class="page-shell">
-    <div v-if="loading" class="page-card empty-state">
+    <section v-if="loading" class="page-card empty-state">
       <h3>問題を読み込み中です</h3>
       <p>少しだけお待ちください。</p>
-    </div>
+    </section>
 
     <p v-else-if="errorMessage" class="message-banner message-banner-warning">
       {{ errorMessage }}
@@ -255,19 +313,24 @@ function goToList() {
 
     <div v-else-if="question" class="page-grid">
       <section class="page-card">
-        <div class="section-heading">
-          <p class="section-kicker">Question</p>
-          <h2>問題 {{ question.questionNumber }}</h2>
+        <div class="detail-top-actions">
+          <button class="button button-secondary" @click="goToList">
+            一覧に戻る
+          </button>
+          <button class="button button-ghost" @click="toggleFlag" :disabled="loadingFlag">
+            {{ flagged ? "★" : "☆" }}
+          </button>
         </div>
 
-        <p class="question-statement">{{ question.body }}</p>
+        <div class="detail-meta">
+          <span class="status-pill">第{{ question.questionNumber }}問</span>
+        </div>
+
+        <p class="question-statement">
+          {{ question.body }}
+        </p>
 
         <div class="subtle-divider"></div>
-
-        <div class="section-heading">
-          <p class="section-kicker">Choices</p>
-          <h2>選択肢</h2>
-        </div>
 
         <ul class="choice-list">
           <li v-for="choice in question.choices" :key="choice.id">
@@ -282,6 +345,7 @@ function goToList() {
                 type="radio"
                 name="choice"
                 :value="choice.id"
+                :disabled="hasAnswered"
               />
               <span class="choice-pill">{{ choice.label }}</span>
               <span class="choice-copy">{{ choice.text }}</span>
@@ -290,8 +354,9 @@ function goToList() {
         </ul>
 
         <div class="button-row">
-          <button class="button button-secondary" @click="goToList">一覧に戻る</button>
-          <button class="button button-primary" @click="answerQuestion">回答する</button>
+          <button class="button button-primary" @click="answerQuestion" :disabled="hasAnswered">
+            回答する
+          </button>
         </div>
 
         <div v-if="resultMessage" :class="feedbackClassName">
@@ -299,12 +364,12 @@ function goToList() {
           <p v-if="selectedChoiceText" class="feedback-line">
             あなたの回答: {{ selectedChoiceText }}
           </p>
-          <p v-if="correctChoiceText" class="feedback-line">
+          <p v-if="!isCorrect && correctChoiceLabel" class="feedback-line">
             正解: {{ correctChoiceLabel }}. {{ correctChoiceText }}
           </p>
         </div>
 
-        <div v-if="hasAnswered" class="button-row">
+        <div v-if="hasAnswered" class="button-row detail-footer-actions">
           <button class="button button-ghost" :disabled="!canGoBack" @click="goBack">
             前の問題へ
           </button>
@@ -320,8 +385,16 @@ function goToList() {
           <h2>解説</h2>
         </div>
 
-        <p class="body-copy">{{ question.explanation }}</p>
+        <p class="body-copy">
+          {{ question.explanation }}
+        </p>
       </section>
     </div>
+
+    <section v-else class="page-card empty-state">
+      <h3>データがありません</h3>
+      <p>表示できる問題が見つかりませんでした。</p>
+    </section>
   </main>
 </template>
+

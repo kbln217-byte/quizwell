@@ -8,24 +8,35 @@ export async function findAllQuestions() {
   });
 }
 
-export async function findByIdQuestion(id: number) {
-  return prisma.question.findUnique({
+export async function findByIdQuestion(id: number, userId: number) {
+  const question = await prisma.question.findUnique({
     where: { id },
     include: {
         choices: {
             orderBy: { id: "asc" },
         },
         examSession: true,
-    },
+        flags: {
+          where: { userId },
+        },
+      },
   });
+
+if (!question) return null;
+
+return {
+  ...question,
+  flagged: question.flags.length > 0,
+};
 }
 
 export async function listQuestions(params: {
   q?: string;
   page: number;
   limit: number;
+  userId: number;
 }) {
-  const { q, page, limit } = params;
+  const { q, page, limit, userId } = params;
   const skip = (page - 1) * limit;
 
   const where: Prisma.QuestionWhereInput = q
@@ -43,6 +54,11 @@ export async function listQuestions(params: {
       where,
       skip,
       take: limit,
+      include: {
+        flags: {
+          where: { userId },
+        },
+      },
       
       orderBy: [
         { examSessionId: "asc" },
@@ -51,7 +67,12 @@ export async function listQuestions(params: {
     }),
     prisma.question.count({ where }),
   ]);
-  return { items, total };
+  return {     items: items.map((item) => ({
+      ...item,
+      flagged: item.flags.length > 0,
+    })),
+    total,
+  };
 }
 
 export async function findReviewCount(userId: number) {

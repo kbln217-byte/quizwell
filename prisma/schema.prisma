@@ -6,13 +6,13 @@ datasource db {
   provider = "postgresql" 
   }
 
-
 model User {
-  id        Int                  @id @default(autoincrement())
-  name      String
-  email     String               @unique
-  answers   UserQuestionAnswer[]
+  id             Int                 @id @default(autoincrement())
+  name           String
+  email          String              @unique
+  answers        UserQuestionAnswer[]
   wrongQuestions WrongQuestion[]
+  flags          QuestionFlag[]
 }
 
 model ExamSession {
@@ -28,7 +28,7 @@ model ExamSession {
 }
 
 model Question {
-  id             Int                  @id @default(autoincrement())
+  id             Int                 @id @default(autoincrement())
   examSessionId  Int
   questionNumber Int
   body           String
@@ -36,8 +36,9 @@ model Question {
   choices        Choice[]
   answers        UserQuestionAnswer[]
   wrongQuestions WrongQuestion[]
+  flags          QuestionFlag[]
 
-  examSession    ExamSession          @relation(fields: [examSessionId], references: [id])
+  examSession    ExamSession         @relation(fields: [examSessionId], references: [id])
 
   @@unique([examSessionId, questionNumber])
 }
@@ -83,4 +84,18 @@ model WrongQuestion {
 
   @@unique([userId, questionId])
   @@index([userId, resolvedAt])
+}
+
+
+
+model QuestionFlag {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  questionId Int
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id])
+
+  @@unique([userId, questionId])
 }
