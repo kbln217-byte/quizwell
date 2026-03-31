@@ -182,12 +182,16 @@ ul {
   filter: blur(4px);
 }
 
-.page-hero-content {
-  position: relative;
-  display: grid;
-  gap: 24px;
-  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.95fr);
-  align-items: end;
+
+@media (max-width: 768px) {
+  .page-hero-content {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+}
+
+.page-hero-content > * {
+  min-width: 0;
 }
 
 .hero-side-actions {
