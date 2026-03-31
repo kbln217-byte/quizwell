@@ -55,7 +55,7 @@ exports.HttpError = HttpError;
 async function login(email) {
     const user = await (0, users_repo_1.findByEmail)(email);
     if (!user) {
-        throw new HttpError(401, "AUTH_FAILED", "Invalid email");
+        throw new HttpError(401, "AUTH_FAILED", "ユーザーが見つかりません");
     }
     const payload = {
         sub: user.id,
@@ -81,7 +81,7 @@ async function register(input) {
                 isNewUser: false,
             };
         }
-        throw new HttpError(400, "VALIDATION_ERROR", "email already exists");
+        throw new HttpError(400, "VALIDATION_ERROR", "すでに同じメールアドレスのユーザーが存在します");
     }
     try {
         const user = await (0, users_repo_1.createUser)({
@@ -96,7 +96,7 @@ async function register(input) {
     catch (e) {
         if (e instanceof client_1.Prisma.PrismaClientKnownRequestError &&
             e.code === "P2002") {
-            throw new HttpError(400, "VALIDATION_ERROR", "email already exists");
+            throw new HttpError(400, "VALIDATION_ERROR", "このメールアドレスは既に登録されています");
         }
         throw e;
     }
