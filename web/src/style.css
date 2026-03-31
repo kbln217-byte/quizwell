@@ -168,7 +168,7 @@ ul {
   height: 140px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 70%);
-  opacity: 0.9;
+  opacity: 0.2;
 }
 
 .page-hero::after {

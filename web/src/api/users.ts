@@ -15,7 +15,8 @@ export async function createUser(input: {
   const text = await res.text()
 
   if (!res.ok) {
-    throw new Error(`ユーザー作成失敗: ${res.status} ${text}`)
+    const json = JSON.parse(text)
+    throw new Error(json.error?.message ?? "ユーザー作成失敗")
   }
 
   return JSON.parse(text)
