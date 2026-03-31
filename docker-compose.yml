@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: quizwell_db
+    restart: always
+    environment:
+      POSTGRES_USER: quizwell
+      POSTGRES_PASSWORD: quizwell
+      POSTGRES_DB: quizwell
+    ports:
+      - "5432:5432"
+    volumes:
+      - quizwell_db_data:/var/lib/postgresql/data
+
+  api:
+    build: ./api
+    container_name: quizwell_api
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://quizwell:quizwell@db:5432/quizwell?schema=public
+      CORS_ORIGIN: http://3.27.9.59
+      PORT: 3000
+
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_API_URL: http://3.27.9.59:3000
+    container_name: quizwell_web
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+volumes:
+  quizwell_db_data:

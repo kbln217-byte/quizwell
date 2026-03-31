@@ -43,7 +43,6 @@ const reviewCount = ref(0)
 const reviewLoading = ref(false)
 const RANDOM_SOURCE_SIZE = 200
 const RANDOM_PICK_SIZE = 50
-const flaggedIds = ref<number[]>([])
 
 function goDetail(id: number) {
   router.push({
@@ -348,30 +347,6 @@ function openRandomQuestions() {
 
 function isFlagged(questionId: number) {
   return questions.value.find((question) => question.id === questionId)?.flagged ?? false
-}
-
-async function loadFlaggedIds() {
-  try {
-    const rawUserId = localStorage.getItem("userId")
-
-    if (!rawUserId) {
-      flaggedIds.value = []
-      return
-    }
-
-    const parsedUserId = Number(rawUserId)
-
-    if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
-      flaggedIds.value = []
-      return
-    }
-
-    const data = await getFlaggedQuestionIds(parsedUserId)
-    flaggedIds.value = data.questionIds
-  } catch (error) {
-    console.error(error)
-    flaggedIds.value = []
-  }
 }
 
 watch(
