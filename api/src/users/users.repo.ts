@@ -1,7 +1,7 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, User } from "@prisma/client";
 import { prisma } from "../db";
 
-export async function findByEmail(email: string) {
+export async function findByEmail(email: string): Promise<User | null> {
   return prisma.user.findUnique({
     where: { email },
   });
@@ -10,6 +10,7 @@ export async function findByEmail(email: string) {
 export async function createUser(input: {
   name: string;
   email: string;
+  passwordHash: string;
 }) {
   return prisma.user.create({
     data: input,

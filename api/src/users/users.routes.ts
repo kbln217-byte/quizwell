@@ -10,25 +10,34 @@ usersRouter.post("/", async (req, res, next) => {
     console.log("users req.body =", req.body);
 
     const body = (req.body ?? {}) as {
-      name?: string;
       email?: string;
+      password?: string;
     };
 
-    const { name, email } = body;
-
-    if (!name || !email) {
+    const { email, password } = body;
+    if (!email || !password) {
       res.status(400).json({
         error: {
           code: "VALIDATION_ERROR",
-          message: "name and email are required",
+          message: "email and password are required",
+        },
+      });
+      return;
+    }
+
+    if (String(password).trim().length < 8) {
+      res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "password must be at least 8 characters",
         },
       });
       return;
     }
 
     const result = await service.register({
-      name: name.trim(),
       email: email.trim().toLowerCase(),
+      password: String(password).trim(),
     });
 
     res.status(result.isNewUser ? 201 : 200).json({ user: result.user });

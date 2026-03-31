@@ -9,6 +9,7 @@ import {
   deleteUserById,
   putUser,
 } from "./users.repo";
+import bcrypt from "bcrypt";
 
 export type JwtPayload = {
   sub: number;
@@ -25,11 +26,15 @@ export class HttpError extends Error {
   }
 }
 
-export async function login(email: string) {
+export async function login(email: string, password: string) {
   const user = await findByEmail(email);
 
-  if (!user) {
-    throw new HttpError(401, "AUTH_FAILED", "Invalid email");
+  if (
+    !user ||
+    !user.passwordHash ||
+    !(await bcrypt.compare(password, user.passwordHash))
+  ) {
+    throw new HttpError(401, "AUTH_FAILED", "Invalid email or password");
   }
 
   const payload: JwtPayload = {
@@ -51,25 +56,22 @@ export async function login(email: string) {
 }
 
 export async function register(input: {
-  name: string;
   email: string;
+  password: string;
 }) {
   const existingUser = await findByEmail(input.email);
   if (existingUser) {
-    if (existingUser.name === input.name) {
-      return {
-        user: existingUser,
-        isNewUser: false,
-      };
-    }
-
     throw new HttpError(400, "VALIDATION_ERROR", "email already exists");
   }
 
   try {
+    const passwordHash = await bcrypt.hash(input.password, 10);
+    const name = input.email.split("@")[0] || input.email;
+
     const user = await createUser({
-      name: input.name,
+      name,
       email: input.email,
+      passwordHash,
     });
 
     return {
@@ -115,7 +117,6 @@ export async function removeUser(id: number) {
     throw e;
   }
 }
-
 export async function putUserById(
   id: number,
   input: {
@@ -123,23 +124,5 @@ export async function putUserById(
     email: string;
   }
 ) {
-  try {
-    return await putUser(id, input);
-  } catch (e: any) {
-    if (
-      e instanceof Prisma.PrismaClientKnownRequestError &&
-      e.code === "P2002"
-    ) {
-      throw new HttpError(400, "VALIDATION_ERROR", "email already exists");
-    }
-
-    if (
-      e instanceof Prisma.PrismaClientKnownRequestError &&
-      e.code === "P2025"
-    ) {
-      throw new HttpError(404, "NOT_FOUND", "user not found");
-    }
-
-    throw e;
-  }
+  return putUser(id, input);
 }

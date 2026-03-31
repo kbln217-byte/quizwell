@@ -1,8 +1,8 @@
 import { buildApiUrl } from "./client"
 
 export async function createUser(input: {
-  name: string
   email: string
+  password: string
 }): Promise<any> {
   const res = await fetch(buildApiUrl("/users"), {
     method: "POST",

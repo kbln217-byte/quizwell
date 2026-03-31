@@ -4,25 +4,30 @@ import { useRouter } from "vue-router"
 import { createUser } from "../api/users"
 
 const router = useRouter()
-const name = ref("")
 const email = ref("")
+const password = ref("")
 const message = ref("")
 
 async function submit() {
   try {
     message.value = ""
 
-    const trimmedName = name.value.trim()
     const trimmedEmail = email.value.trim()
+    const trimmedPassword = password.value.trim()
 
-    if (!trimmedName || !trimmedEmail) {
-      message.value = "名前とメールアドレスを入力してください"
+    if (!trimmedEmail || !trimmedPassword) {
+      message.value = "メールアドレスとパスワードを入力してください"
+      return
+    }
+
+    if (trimmedPassword.length < 8) {
+      message.value = "パスワードは8文字以上で入力してください"
       return
     }
 
     const data = await createUser({
-      name: trimmedName,
       email: trimmedEmail,
+      password: trimmedPassword,
     })
 
     console.log("users response:", data)
@@ -70,20 +75,10 @@ async function submit() {
       <div class="section-heading">
         <p class="section-kicker">Register</p>
         <h2>ユーザー登録</h2>
-        <p class="section-description">初回は登録され、同じ名前・メールアドレスならそのまま問題一覧へ進みます。</p>
+        <p class="section-description">メールアドレスとパスワードで登録します。</p>
       </div>
 
       <div class="form-stack">
-        <label class="field">
-          <span>名前</span>
-          <input
-            v-model="name"
-            class="input"
-            type="text"
-            placeholder="例: ほしの さくら"
-          />
-        </label>
-
         <label class="field">
           <span>メールアドレス</span>
           <input
@@ -91,6 +86,16 @@ async function submit() {
             class="input"
             type="email"
             placeholder="例: sakura@example.com"
+          />
+        </label>
+
+        <label class="field">
+          <span>パスワード</span>
+          <input
+            v-model="password"
+            class="input"
+            type="password"
+            placeholder="8文字以上のパスワード"
           />
         </label>
       </div>
