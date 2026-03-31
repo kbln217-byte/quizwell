@@ -27,11 +27,13 @@ jobs:
             changed_files="$(git diff --name-only "$before_sha" "${{ github.sha }}")"
           fi
 
-          echo "$changed_files"
+          printf 'Changed files:\n%s\n' "$changed_files"
 
           if echo "$changed_files" | grep -Eq '^(api/seed-data/|api/seed\.js$)'; then
+            echo "should_seed=true"
             echo "should_seed=true" >> "$GITHUB_OUTPUT"
           else
+            echo "should_seed=false"
             echo "should_seed=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -48,8 +50,11 @@ jobs:
 
       - name: Deploy to EC2
         shell: bash
+        env:
+          SHOULD_SEED: ${{ steps.seed_changes.outputs.should_seed }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << EOF
+          echo "Deploy step SHOULD_SEED=$SHOULD_SEED"
+          ssh -i ~/.ssh/id_ed25519 "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "SHOULD_SEED='$SHOULD_SEED' bash -s" << EOF
             set -e
             cd "${{ secrets.APP_DIR }}"
 
@@ -60,8 +65,12 @@ jobs:
             docker compose up -d --build db
             docker compose build api
             docker compose run --rm api npx prisma migrate deploy
-            if [ "${{ steps.seed_changes.outputs.should_seed }}" = "true" ]; then
+            echo "Remote SHOULD_SEED=$SHOULD_SEED"
+            if [ "$SHOULD_SEED" = "true" ]; then
+              echo "Running seed:master"
               docker compose run --rm api npm run seed:master
+            else
+              echo "Skipping seed:master"
             fi
             docker compose up -d --force-recreate api
             docker compose build --no-cache web
