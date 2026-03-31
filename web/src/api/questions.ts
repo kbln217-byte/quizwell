@@ -1,10 +1,9 @@
-export async function getQuestions(userId?: number) {
-  const url = new URL("http://localhost:3000/questions")
-  if (typeof userId === "number") {
-    url.searchParams.set("userId", String(userId))
-  }
+import { buildApiUrl } from "./client"
 
-  const res = await fetch(url.toString())
+export async function getQuestions(userId?: number) {
+  const res = await fetch(
+    buildApiUrl("/questions", typeof userId === "number" ? { userId } : undefined)
+  )
 
   if (!res.ok) {
     throw new Error("問題取得失敗")
@@ -14,12 +13,9 @@ export async function getQuestions(userId?: number) {
 }
 
 export async function getQuestionById(id: number | string, userId?: number) {
-  const url = new URL(`http://localhost:3000/questions/${id}`)
-  if (typeof userId === "number") {
-    url.searchParams.set("userId", String(userId))
-  }
-
-  const res = await fetch(url.toString())
+  const res = await fetch(
+    buildApiUrl(`/questions/${id}`, typeof userId === "number" ? { userId } : undefined)
+  )
 
   if (!res.ok) {
     throw new Error("問題詳細取得失敗")

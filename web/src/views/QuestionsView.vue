@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { getQuestions } from "../api/questions"
-import { getReviewQuestions } from "../api/review"
+import { getReviewCount, getReviewQuestions } from "../api/review"
 import { getSessions } from "../api/sessions"
 
 type Question = {
@@ -72,13 +72,7 @@ async function loadReviewCount() {
       return
     }
 
-    const res = await fetch(`http://localhost:3000/review/count?userId=${parsedUserId}`)
-
-    if (!res.ok) {
-      throw new Error("復習件数の取得に失敗しました")
-    }
-
-    const data = await res.json()
+    const data = await getReviewCount(parsedUserId)
     reviewCount.value = typeof data.count === "number" ? data.count : 0
   } catch (error) {
     console.error(error)

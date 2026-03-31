@@ -1,9 +1,11 @@
+import { buildApiUrl } from "./client"
+
 export async function submitAnswer(input: {
   userId: number
   questionId: number
   selectedChoiceId: number
 }) {
-  const res = await fetch("http://localhost:3000/answers", {
+  const res = await fetch(buildApiUrl("/answers"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router"
 import { getQuestionById, getQuestions } from "../api/questions"
 import { submitAnswer } from "../api/answers"
 import { getReviewQuestions } from "../api/review"
+import { getQuestionFlag, toggleQuestionFlag } from "../api/flags"
 
 type Choice = {
   id: number
@@ -227,15 +228,7 @@ async function fetchFlag() {
   }
 
   try {
-    const res = await fetch(
-      `http://localhost:3000/question-flags/${route.params.id}?userId=${userId}`
-    )
-
-    if (!res.ok) {
-      throw new Error("目印の取得に失敗しました")
-    }
-
-    const data = await res.json()
+    const data = await getQuestionFlag(String(route.params.id), userId)
     flagged.value = Boolean(data.flagged)
   } catch (error) {
     console.error(error)
@@ -254,15 +247,8 @@ async function toggleFlag() {
   loadingFlag.value = true
 
   try {
-    await fetch(`http://localhost:3000/question-flags/toggle`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ userId, questionId: Number(route.params.id) }),
-    })
-
-    flagged.value = !flagged.value
+    const data = await toggleQuestionFlag(userId, Number(route.params.id))
+    flagged.value = Boolean(data.flagged)
   } catch (error) {
     console.error(error)
   } finally {

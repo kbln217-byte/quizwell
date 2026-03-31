@@ -1,7 +1,7 @@
-const BASE_URL = "http://localhost:3000"
+import { buildApiUrl } from "./client"
 
 export async function getSessions() {
-  const res = await fetch(`${BASE_URL}/sessions`)
+  const res = await fetch(buildApiUrl("/sessions"))
 
   if (!res.ok) {
     throw new Error("回次取得失敗")

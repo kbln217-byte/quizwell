@@ -1,13 +1,13 @@
-const BASE_URL = 'http://localhost:3000'
+import { buildApiUrl } from "./client"
 
 export async function createUser(input: {
   name: string
   email: string
 }): Promise<any> {
-  const res = await fetch(`${BASE_URL}/users`, {
-    method: 'POST',
+  const res = await fetch(buildApiUrl("/users"), {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(input),
   })
