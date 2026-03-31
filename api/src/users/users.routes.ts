@@ -25,11 +25,11 @@ usersRouter.post("/", async (req, res, next) => {
       return;
     }
 
-    if (String(password).trim().length < 8) {
+    if (String(password).trim().length < 4) {
       res.status(400).json({
         error: {
           code: "VALIDATION_ERROR",
-          message: "password must be at least 8 characters",
+          message: "password must be at least 4 characters",
         },
       });
       return;

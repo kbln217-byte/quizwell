@@ -85,7 +85,7 @@ async function submit() {
             v-model="email"
             class="input"
             type="email"
-            placeholder="例: sakura@example.com"
+            placeholder="例: XXXX@example.com"
           />
         </label>
 
@@ -95,7 +95,7 @@ async function submit() {
             v-model="password"
             class="input"
             type="password"
-            placeholder="8文字以上のパスワード"
+            placeholder="4文字以上のパスワード"
           />
         </label>
       </div>
