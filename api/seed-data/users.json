@@ -1,0 +1,54 @@
+[
+  {
+    "name": "Taro",
+    "email": "taro@example.com"
+  },
+  {
+    "name": "maitake",
+    "email": "mai@example.com"
+  },
+  {
+    "name": "test-user",
+    "email": "test-1773825325430@example.com"
+  },
+  {
+    "name": "test-user",
+    "email": "test-1774177941009@example.com"
+  },
+  {
+    "name": "test-user",
+    "email": "test-1774179517737@example.com"
+  },
+  {
+    "name": "test-user",
+    "email": "test-1774187028591@example.com"
+  },
+  {
+    "name": "今井若葉",
+    "email": "kb.ln217@gmail.com"
+  },
+  {
+    "name": "今井若葉",
+    "email": "test123@example.com"
+  },
+  {
+    "name": "今井",
+    "email": "1test123@example.com"
+  },
+  {
+    "name": "今井",
+    "email": "kb@gmail.com"
+  },
+  {
+    "name": "test-user",
+    "email": "test-1774337627358@example.com"
+  },
+  {
+    "name": "same-user",
+    "email": "same-user-1774337627506@example.com"
+  },
+  {
+    "name": "first-user",
+    "email": "duplicate-email-1774337627516@example.com"
+  }
+]

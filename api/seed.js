@@ -4,8 +4,29 @@ const { PrismaClient } = require("@prisma/client");
 const { PrismaPg } = require("@prisma/adapter-pg");
 const { Pool } = require("pg");
 
+function loadDatabaseUrlFromEnvFile() {
+  if (process.env.DATABASE_URL) {
+    return;
+  }
+
+  const envPath = path.join(__dirname, ".env");
+
+  if (!fs.existsSync(envPath)) {
+    return;
+  }
+
+  const envText = fs.readFileSync(envPath, "utf-8");
+  const match = envText.match(/^\s*DATABASE_URL\s*=\s*"?([^"\r\n]+)"?\s*$/m);
+
+  if (match) {
+    process.env.DATABASE_URL = match[1];
+  }
+}
+
+loadDatabaseUrlFromEnvFile();
+
 if (!process.env.DATABASE_URL) {
-  console.error("❌ DATABASE_URL is not set in .env file");
+  console.error("DATABASE_URL is not set in the environment.");
   process.exit(1);
 }
 
@@ -21,151 +42,379 @@ const prisma = new PrismaClient({
   errorFormat: "pretty",
 });
 
-async function main() {
-  const mergedFiles = [
-    "parsed/2024-round28-merged.json",
-    "parsed/2025-round29-merged.json",
-    "parsed/2025-round30-merged.json",
-    "parsed/2025-round31-merged.json",
+const apiDir = __dirname;
+const repoRoot = path.resolve(apiDir, "..");
+const seedDataDir = path.join(apiDir, "seed-data");
+const parsedDir = path.join(repoRoot, "parsed");
+
+function resolveQuestionFiles() {
+  const cliFiles = process.argv.slice(2);
+
+  if (cliFiles.length > 0) {
+    return cliFiles.map((filePath) => path.resolve(process.cwd(), filePath));
+  }
+
+  const seedFiles = fs.existsSync(seedDataDir)
+    ? fs
+        .readdirSync(seedDataDir)
+        .filter((fileName) => fileName.endsWith("-merged.json"))
+        .sort()
+        .map((fileName) => path.join(seedDataDir, fileName))
+    : [];
+
+  if (seedFiles.length > 0) {
+    return seedFiles;
+  }
+
+  return [
+    path.join(parsedDir, "2024-round28-merged.json"),
+    path.join(parsedDir, "2025-round29-merged.json"),
+    path.join(parsedDir, "2025-round30-merged.json"),
+    path.join(parsedDir, "2025-round31-merged.json"),
   ];
+}
 
-  console.log("🚀 Starting database seeding...\n");
+function readJsonIfExists(filePath, fallbackValue) {
+  if (!fs.existsSync(filePath)) {
+    return fallbackValue;
+  }
 
-  for (const file of mergedFiles) {
-    try {
-      console.log(`📄 Processing ${file}...`);
+  return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+}
 
-      // ファイルの存在確認
-      if (!fs.existsSync(file)) {
-        console.log(`⚠️  File not found: ${file}`);
-        continue;
-      }
+function toNullableDate(value) {
+  if (!value) {
+    return null;
+  }
 
-      const data = JSON.parse(fs.readFileSync(file, "utf-8"));
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
-      if (!Array.isArray(data) || data.length === 0) {
-        console.log(`⚠️  No data found in ${file}`);
-        continue;
-      }
+function getSessionKey(examYear, examRound) {
+  return `${examYear}:${examRound}`;
+}
 
-      // Get exam info from first question
-      const firstQuestion = data[0];
-      const examSessionData = {
+function getQuestionKey(examYear, examRound, questionNumber) {
+  return `${examYear}:${examRound}:${questionNumber}`;
+}
+
+function getChoiceKey(examYear, examRound, questionNumber, label) {
+  return `${examYear}:${examRound}:${questionNumber}:${label}`;
+}
+
+async function seedQuestions() {
+  const inputFiles = resolveQuestionFiles();
+
+  console.log("Starting question seeding...");
+  console.log(`Using ${inputFiles.length} file(s).`);
+
+  for (const filePath of inputFiles) {
+    if (!fs.existsSync(filePath)) {
+      console.log(`Skipping missing file: ${filePath}`);
+      continue;
+    }
+
+    const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+
+    if (!Array.isArray(data) || data.length === 0) {
+      console.log(`Skipping empty file: ${filePath}`);
+      continue;
+    }
+
+    const firstQuestion = data[0];
+    const examSession = await prisma.examSession.upsert({
+      where: {
+        examYear_examRound: {
+          examYear: firstQuestion.examYear,
+          examRound: firstQuestion.examRound,
+        },
+      },
+      update: {
+        examDate: toNullableDate(firstQuestion.examDate),
+        title: firstQuestion.title ?? null,
+        status:
+          typeof firstQuestion.status === "boolean" ? firstQuestion.status : true,
+      },
+      create: {
         examYear: firstQuestion.examYear,
         examRound: firstQuestion.examRound,
-        examDate: firstQuestion.examDate ? new Date(firstQuestion.examDate) : null,
-        status: true,
-      };
+        examDate: toNullableDate(firstQuestion.examDate),
+        title: firstQuestion.title ?? null,
+        status:
+          typeof firstQuestion.status === "boolean" ? firstQuestion.status : true,
+      },
+    });
 
-      // ExamSessionを作成または取得
-      let examSession;
-      try {
-        examSession = await prisma.examSession.upsert({
-          where: {
-            examYear_examRound: {
-              examYear: examSessionData.examYear,
-              examRound: examSessionData.examRound,
-            },
-          },
-          update: {},
-          create: examSessionData,
-        });
+    let questionCount = 0;
+    let choiceCount = 0;
 
-        console.log(
-          `✅ ExamSession: Year ${examSession.examYear}, Round ${examSession.examRound} (ID: ${examSession.id})`
-        );
-      } catch (error) {
-        console.error(`❌ Error creating ExamSession:`, error.message);
+    for (const question of data) {
+      if (!question.questionNumber || !question.body || !Array.isArray(question.choices)) {
+        console.log(`Skipping invalid question: ${question.questionNumber ?? "unknown"}`);
         continue;
       }
 
-      // 質問と選択肢を挿入
-      let questionCount = 0;
-      let choiceCount = 0;
+      const savedQuestion = await prisma.question.upsert({
+        where: {
+          examSessionId_questionNumber: {
+            examSessionId: examSession.id,
+            questionNumber: question.questionNumber,
+          },
+        },
+        update: {
+          body: question.body,
+          explanation: question.explanation || null,
+        },
+        create: {
+          examSessionId: examSession.id,
+          questionNumber: question.questionNumber,
+          body: question.body,
+          explanation: question.explanation || null,
+        },
+      });
 
-      for (const question of data) {
-        if (!question.questionNumber || !question.body || !Array.isArray(question.choices)) {
-          console.log(`⚠️  Skipping invalid question: ${question.questionNumber}`);
-          continue;
-        }
-
-        try {
-          const q = await prisma.question.upsert({
-            where: {
-              examSessionId_questionNumber: {
-                examSessionId: examSession.id,
-                questionNumber: question.questionNumber,
-              },
+      for (const choice of question.choices) {
+        await prisma.choice.upsert({
+          where: {
+            questionId_label: {
+              questionId: savedQuestion.id,
+              label: choice.label,
             },
-            update: {
-              body: question.body,
-              explanation: question.explanation || null,
-            },
-            create: {
-              examSessionId: examSession.id,
-              questionNumber: question.questionNumber,
-              body: question.body,
-              explanation: question.explanation || null,
-            },
-          });
+          },
+          update: {
+            text: choice.text,
+            isCorrect: Boolean(choice.isCorrect),
+          },
+          create: {
+            questionId: savedQuestion.id,
+            label: choice.label,
+            text: choice.text,
+            isCorrect: Boolean(choice.isCorrect),
+          },
+        });
 
-          // 選択肢を挿入
-          for (const choice of question.choices) {
-            try {
-              await prisma.choice.upsert({
-                where: {
-                  questionId_label: {
-                    questionId: q.id,
-                    label: choice.label,
-                  },
-                },
-                update: {
-                  text: choice.text,
-                  isCorrect: choice.isCorrect,
-                },
-                create: {
-                  questionId: q.id,
-                  label: choice.label,
-                  text: choice.text,
-                  isCorrect: choice.isCorrect,
-                },
-              });
-              choiceCount++;
-            } catch (error) {
-              console.error(
-                `❌ Error creating choice for question ${q.questionNumber}:`,
-                error.message
-              );
-            }
-          }
-
-          questionCount++;
-        } catch (error) {
-          console.error(
-            `❌ Error creating question ${question.questionNumber}:`,
-            error.message
-          );
-        }
+        choiceCount += 1;
       }
 
-      console.log(
-        `✅ Inserted ${questionCount} questions with ${choiceCount} choices\n`
+      questionCount += 1;
+    }
+
+    console.log(
+      `Seeded session ${examSession.examYear}-round${examSession.examRound}: ${questionCount} questions / ${choiceCount} choices`
+    );
+  }
+}
+
+async function buildReferenceMaps() {
+  const sessions = await prisma.examSession.findMany({
+    include: {
+      questions: {
+        include: {
+          choices: true,
+        },
+      },
+    },
+  });
+
+  const sessionMap = new Map();
+  const questionMap = new Map();
+  const choiceMap = new Map();
+
+  for (const session of sessions) {
+    sessionMap.set(getSessionKey(session.examYear, session.examRound), session);
+
+    for (const question of session.questions) {
+      const questionKey = getQuestionKey(
+        session.examYear,
+        session.examRound,
+        question.questionNumber
       );
-    } catch (error) {
-      console.error(`❌ Error processing ${file}:`, error.message);
-      continue;
+
+      questionMap.set(questionKey, question);
+
+      for (const choice of question.choices) {
+        choiceMap.set(
+          getChoiceKey(session.examYear, session.examRound, question.questionNumber, choice.label),
+          choice
+        );
+      }
     }
   }
 
-  console.log("🎉 Database seeding completed!");
+  return { sessionMap, questionMap, choiceMap };
+}
+
+async function seedUsers() {
+  const usersPath = path.join(seedDataDir, "users.json");
+  const users = readJsonIfExists(usersPath, []);
+
+  if (!Array.isArray(users) || users.length === 0) {
+    console.log("No users.json found. Skipping user-related seed.");
+    return new Map();
+  }
+
+  const userMap = new Map();
+
+  for (const user of users) {
+    if (!user?.email || !user?.name) {
+      continue;
+    }
+
+    const savedUser = await prisma.user.upsert({
+      where: {
+        email: user.email,
+      },
+      update: {
+        name: user.name,
+      },
+      create: {
+        name: user.name,
+        email: user.email,
+      },
+    });
+
+    userMap.set(savedUser.email, savedUser);
+  }
+
+  console.log(`Seeded ${userMap.size} users.`);
+  return userMap;
+}
+
+async function reseedUserStateTables(userMap, referenceMaps) {
+  const { questionMap, choiceMap } = referenceMaps;
+  const userIds = [...userMap.values()].map((user) => user.id);
+
+  if (userIds.length === 0) {
+    return;
+  }
+
+  const answersPath = path.join(seedDataDir, "user-question-answers.json");
+  const wrongQuestionsPath = path.join(seedDataDir, "wrong-questions.json");
+  const flagsPath = path.join(seedDataDir, "question-flags.json");
+
+  const answers = readJsonIfExists(answersPath, []);
+  const wrongQuestions = readJsonIfExists(wrongQuestionsPath, []);
+  const flags = readJsonIfExists(flagsPath, []);
+
+  await prisma.userQuestionAnswer.deleteMany({
+    where: {
+      userId: { in: userIds },
+    },
+  });
+
+  await prisma.wrongQuestion.deleteMany({
+    where: {
+      userId: { in: userIds },
+    },
+  });
+
+  await prisma.questionFlag.deleteMany({
+    where: {
+      userId: { in: userIds },
+    },
+  });
+
+  let answerCount = 0;
+  for (const answer of answers) {
+    const user = userMap.get(answer.userEmail);
+    const question = questionMap.get(
+      getQuestionKey(answer.examYear, answer.examRound, answer.questionNumber)
+    );
+
+    if (!user || !question) {
+      continue;
+    }
+
+    const selectedChoice =
+      answer.selectedChoiceLabel == null
+        ? null
+        : choiceMap.get(
+            getChoiceKey(
+              answer.examYear,
+              answer.examRound,
+              answer.questionNumber,
+              answer.selectedChoiceLabel
+            )
+          ) ?? null;
+
+    await prisma.userQuestionAnswer.create({
+      data: {
+        userId: user.id,
+        questionId: question.id,
+        selectedChoiceId: selectedChoice?.id ?? null,
+        isCorrect: Boolean(answer.isCorrect),
+        answeredAt: toNullableDate(answer.answeredAt) ?? new Date(),
+      },
+    });
+
+    answerCount += 1;
+  }
+
+  let wrongQuestionCount = 0;
+  for (const item of wrongQuestions) {
+    const user = userMap.get(item.userEmail);
+    const question = questionMap.get(
+      getQuestionKey(item.examYear, item.examRound, item.questionNumber)
+    );
+
+    if (!user || !question) {
+      continue;
+    }
+
+    await prisma.wrongQuestion.create({
+      data: {
+        userId: user.id,
+        questionId: question.id,
+        createdAt: toNullableDate(item.createdAt) ?? new Date(),
+        resolvedAt: toNullableDate(item.resolvedAt),
+      },
+    });
+
+    wrongQuestionCount += 1;
+  }
+
+  let flagCount = 0;
+  for (const item of flags) {
+    const user = userMap.get(item.userEmail);
+    const question = questionMap.get(
+      getQuestionKey(item.examYear, item.examRound, item.questionNumber)
+    );
+
+    if (!user || !question) {
+      continue;
+    }
+
+    await prisma.questionFlag.create({
+      data: {
+        userId: user.id,
+        questionId: question.id,
+        createdAt: toNullableDate(item.createdAt) ?? new Date(),
+      },
+    });
+
+    flagCount += 1;
+  }
+
+  console.log(
+    `Seeded user state: ${answerCount} answers / ${wrongQuestionCount} wrong questions / ${flagCount} flags`
+  );
+}
+
+async function main() {
+  await seedQuestions();
+  const referenceMaps = await buildReferenceMaps();
+  const userMap = await seedUsers();
+  await reseedUserStateTables(userMap, referenceMaps);
+  console.log("Database seeding completed.");
 }
 
 main()
-  .catch((e) => {
-    console.error("❌ Fatal error during seeding:");
-    console.error(e);
+  .catch((error) => {
+    console.error("Fatal error during seeding:", error);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

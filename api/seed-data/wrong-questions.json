@@ -1,0 +1,114 @@
+[
+  {
+    "userEmail": "mai@example.com",
+    "examYear": 2024,
+    "examRound": 28,
+    "questionNumber": 1,
+    "createdAt": "2026-03-22T13:35:37.767Z",
+    "resolvedAt": "2026-03-23T13:18:35.020Z"
+  },
+  {
+    "userEmail": "kb.ln217@gmail.com",
+    "examYear": 2024,
+    "examRound": 28,
+    "questionNumber": 34,
+    "createdAt": "2026-03-24T23:45:24.822Z",
+    "resolvedAt": null
+  },
+  {
+    "userEmail": "kb.ln217@gmail.com",
+    "examYear": 2025,
+    "examRound": 31,
+    "questionNumber": 2,
+    "createdAt": "2026-03-27T14:32:00.952Z",
+    "resolvedAt": null
+  },
+  {
+    "userEmail": "kb.ln217@gmail.com",
+    "examYear": 2025,
+    "examRound": 31,
+    "questionNumber": 5,
+    "createdAt": "2026-03-27T14:32:43.099Z",
+    "resolvedAt": null
+  },
+  {
+    "userEmail": "kb.ln217@gmail.com",
+    "examYear": 2025,
+    "examRound": 31,
+    "questionNumber": 6,
+    "createdAt": "2026-03-27T17:37:15.525Z",
+    "resolvedAt": null
+  },
+  {
+    "userEmail": "1test123@example.com",
+    "examYear": 2024,
+    "examRound": 28,
+    "questionNumber": 1,
+    "createdAt": "2026-03-23T09:54:59.636Z",
+    "resolvedAt": "2026-03-23T09:55:05.899Z"
+  },
+  {
+    "userEmail": "1test123@example.com",
+    "examYear": 2024,
+    "examRound": 28,
+    "questionNumber": 2,
+    "createdAt": "2026-03-23T10:48:36.339Z",
+    "resolvedAt": null
+  },
+  {
+    "userEmail": "kb@gmail.com",
+    "examYear": 2024,
+    "examRound": 28,
+    "questionNumber": 1,
+    "createdAt": "2026-03-23T14:08:38.157Z",
+    "resolvedAt": "2026-03-24T07:25:15.385Z"
+  },
+  {
+    "userEmail": "kb@gmail.com",
+    "examYear": 2024,
+    "examRound": 28,
+    "questionNumber": 2,
+    "createdAt": "2026-03-23T13:55:49.190Z",
+    "resolvedAt": null
+  },
+  {
+    "userEmail": "kb@gmail.com",
+    "examYear": 2024,
+    "examRound": 28,
+    "questionNumber": 3,
+    "createdAt": "2026-03-23T15:04:20.986Z",
+    "resolvedAt": null
+  },
+  {
+    "userEmail": "kb@gmail.com",
+    "examYear": 2024,
+    "examRound": 28,
+    "questionNumber": 8,
+    "createdAt": "2026-03-24T05:32:35.898Z",
+    "resolvedAt": null
+  },
+  {
+    "userEmail": "kb@gmail.com",
+    "examYear": 2024,
+    "examRound": 28,
+    "questionNumber": 9,
+    "createdAt": "2026-03-24T05:56:44.488Z",
+    "resolvedAt": null
+  },
+  {
+    "userEmail": "kb@gmail.com",
+    "examYear": 2025,
+    "examRound": 29,
+    "questionNumber": 1,
+    "createdAt": "2026-03-24T07:12:01.007Z",
+    "resolvedAt": null
+  },
+  {
+    "userEmail": "kb@gmail.com",
+    "examYear": 2025,
+    "examRound": 31,
+    "questionNumber": 22,
+    "createdAt": "2026-03-24T07:16:48.045Z",
+    "resolvedAt": null
+  }
+]
