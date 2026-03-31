@@ -12,6 +12,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detect seed changes
+        id: seed_changes
+        shell: bash
+        run: |
+          set -e
+          before_sha="${{ github.event.before }}"
+          if [ -z "$before_sha" ] || [ "$before_sha" = "0000000000000000000000000000000000000000" ]; then
+            changed_files="$(git diff-tree --no-commit-id --name-only -r "${{ github.sha }}")"
+          else
+            changed_files="$(git diff --name-only "$before_sha" "${{ github.sha }}")"
+          fi
+
+          echo "$changed_files"
+
+          if echo "$changed_files" | grep -Eq '^(api/seed-data/|api/seed\.js$)'; then
+            echo "should_seed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_seed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Setup SSH
         shell: bash
@@ -36,8 +58,12 @@ jobs:
             git rev-parse HEAD
 
             docker compose up -d --build db
+            docker compose build api
             docker compose run --rm api npx prisma migrate deploy
-            docker compose up -d --build api
+            if [ "${{ steps.seed_changes.outputs.should_seed }}" = "true" ]; then
+              docker compose run --rm api npm run seed:master
+            fi
+            docker compose up -d --force-recreate api
             docker compose build --no-cache web
             docker compose up -d --force-recreate web
             docker exec quizwell_web sh -lc 'if grep -R "localhost:3000" /usr/share/nginx/html; then exit 1; fi'

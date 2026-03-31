@@ -46,9 +46,19 @@ const apiDir = __dirname;
 const repoRoot = path.resolve(apiDir, "..");
 const seedDataDir = path.join(apiDir, "seed-data");
 const parsedDir = path.join(repoRoot, "parsed");
+const validSeedModes = new Set(["master", "user-state", "all"]);
 
-function resolveQuestionFiles() {
-  const cliFiles = process.argv.slice(2);
+function parseSeedArgs() {
+  const cliArgs = process.argv.slice(2);
+  const firstArg = cliArgs[0];
+  const mode = validSeedModes.has(firstArg) ? firstArg : "master";
+  const fileArgs = validSeedModes.has(firstArg) ? cliArgs.slice(1) : cliArgs;
+
+  return { mode, fileArgs };
+}
+
+function resolveQuestionFiles(fileArgs) {
+  const cliFiles = fileArgs;
 
   if (cliFiles.length > 0) {
     return cliFiles.map((filePath) => path.resolve(process.cwd(), filePath));
@@ -103,8 +113,8 @@ function getChoiceKey(examYear, examRound, questionNumber, label) {
   return `${examYear}:${examRound}:${questionNumber}:${label}`;
 }
 
-async function seedQuestions() {
-  const inputFiles = resolveQuestionFiles();
+async function seedQuestions(fileArgs = []) {
+  const inputFiles = resolveQuestionFiles(fileArgs);
 
   console.log("Starting question seeding...");
   console.log(`Using ${inputFiles.length} file(s).`);
@@ -402,10 +412,18 @@ async function reseedUserStateTables(userMap, referenceMaps) {
 }
 
 async function main() {
-  await seedQuestions();
-  const referenceMaps = await buildReferenceMaps();
-  const userMap = await seedUsers();
-  await reseedUserStateTables(userMap, referenceMaps);
+  const { mode, fileArgs } = parseSeedArgs();
+
+  if (mode === "master" || mode === "all") {
+    await seedQuestions(fileArgs);
+  }
+
+  if (mode === "user-state" || mode === "all") {
+    const referenceMaps = await buildReferenceMaps();
+    const userMap = await seedUsers();
+    await reseedUserStateTables(userMap, referenceMaps);
+  }
+
   console.log("Database seeding completed.");
 }
 

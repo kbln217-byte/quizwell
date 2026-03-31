@@ -7,7 +7,10 @@
   "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
   "build": "tsc",
   "start": "node dist/src/server.js",
-  "seed": "node seed.js",
+  "seed": "node seed.js master",
+  "seed:master": "node seed.js master",
+  "seed:user-state": "node seed.js user-state",
+  "seed:all": "node seed.js all",
   "seed:export": "node export-seed.js",
   "test": "vitest run",
   "test:watch": "vitest"
@@ -45,6 +48,6 @@
     "vitest": "^4.1.0"
   },
   "prisma": {
-    "seed": "node seed.js"
+    "seed": "node seed.js master"
   }
 }
