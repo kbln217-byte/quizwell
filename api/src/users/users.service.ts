@@ -34,7 +34,7 @@ export async function login(email: string, password: string) {
     !user.passwordHash ||
     !(await bcrypt.compare(password, user.passwordHash))
   ) {
-    throw new HttpError(401, "AUTH_FAILED", "Invalid email or password");
+    throw new HttpError(401, "AUTH_FAILED", "ユーザーが見つかりません");
   }
 
   const payload: JwtPayload = {
@@ -61,7 +61,7 @@ export async function register(input: {
 }) {
   const existingUser = await findByEmail(input.email);
   if (existingUser) {
-    throw new HttpError(400, "VALIDATION_ERROR", "email already exists");
+    throw new HttpError(400, "VALIDATION_ERROR", "すでに同じメールアドレスのユーザーが存在します");
   }
 
   try {
@@ -83,7 +83,7 @@ export async function register(input: {
       e instanceof Prisma.PrismaClientKnownRequestError &&
       e.code === "P2002"
     ) {
-      throw new HttpError(400, "VALIDATION_ERROR", "email already exists");
+      throw new HttpError(400, "VALIDATION_ERROR", "このメールアドレスは既に登録されています");
     }
 
     throw e;
