@@ -33,10 +33,14 @@ jobs:
 
             git fetch origin
             git reset --hard origin/main
+            git rev-parse HEAD
 
             docker compose up -d --build db
             docker compose run --rm api npx prisma migrate deploy
-            docker compose up -d --build api web
+            docker compose up -d --build api
+            docker compose build --no-cache web
+            docker compose up -d --force-recreate web
+            docker exec quizwell_web sh -lc 'if grep -R "localhost:3000" /usr/share/nginx/html; then exit 1; fi'
 
             docker image prune -af || true
             docker builder prune -af || true
