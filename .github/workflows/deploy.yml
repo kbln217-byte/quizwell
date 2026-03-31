@@ -29,13 +29,31 @@ jobs:
 
           printf 'Changed files:\n%s\n' "$changed_files"
 
+          should_seed=false
+          should_build_api=false
+          should_build_web=false
+
           if echo "$changed_files" | grep -Eq '^(api/seed-data/|api/seed\.js$)'; then
-            echo "should_seed=true"
-            echo "should_seed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_seed=false"
-            echo "should_seed=false" >> "$GITHUB_OUTPUT"
+            should_seed=true
           fi
+
+          if echo "$changed_files" | grep -Eq '^(api/|docker-compose\.yml$)'; then
+            should_build_api=true
+          fi
+
+          if echo "$changed_files" | grep -Eq '^(web/|docker-compose\.yml$)'; then
+            should_build_web=true
+          fi
+
+          echo "should_seed=$should_seed"
+          echo "should_build_api=$should_build_api"
+          echo "should_build_web=$should_build_web"
+
+          {
+            echo "should_seed=$should_seed"
+            echo "should_build_api=$should_build_api"
+            echo "should_build_web=$should_build_web"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Setup SSH
         shell: bash
@@ -52,9 +70,11 @@ jobs:
         shell: bash
         env:
           SHOULD_SEED: ${{ steps.seed_changes.outputs.should_seed }}
+          SHOULD_BUILD_API: ${{ steps.seed_changes.outputs.should_build_api }}
+          SHOULD_BUILD_WEB: ${{ steps.seed_changes.outputs.should_build_web }}
         run: |
-          echo "Deploy step SHOULD_SEED=$SHOULD_SEED"
-          ssh -i ~/.ssh/id_ed25519 "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "APP_DIR='${{ secrets.APP_DIR }}' SHOULD_SEED='$SHOULD_SEED' bash -se" << 'EOF'
+          echo "Deploy step SHOULD_SEED=$SHOULD_SEED SHOULD_BUILD_API=$SHOULD_BUILD_API SHOULD_BUILD_WEB=$SHOULD_BUILD_WEB"
+          ssh -i ~/.ssh/id_ed25519 "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "APP_DIR='${{ secrets.APP_DIR }}' SHOULD_SEED='$SHOULD_SEED' SHOULD_BUILD_API='$SHOULD_BUILD_API' SHOULD_BUILD_WEB='$SHOULD_BUILD_WEB' bash -se" << 'EOF'
             set -e
             cd "$APP_DIR"
 
@@ -63,19 +83,42 @@ jobs:
             git rev-parse HEAD
 
             docker compose up -d --build db
-            docker compose build api
+            echo "Remote SHOULD_SEED=$SHOULD_SEED SHOULD_BUILD_API=$SHOULD_BUILD_API SHOULD_BUILD_WEB=$SHOULD_BUILD_WEB"
+            echo "Pruning old Docker cache before builds"
+            docker image prune -af || true
+            docker builder prune -af || true
+
+            if [ "$SHOULD_BUILD_API" = "true" ] || [ "$SHOULD_SEED" = "true" ]; then
+              echo "Building api image"
+              docker compose build api
+            else
+              echo "Skipping api build"
+            fi
+
             docker compose run --rm -T api npx prisma migrate deploy < /dev/null
-            echo "Remote SHOULD_SEED=$SHOULD_SEED"
             if [ "$SHOULD_SEED" = "true" ]; then
               echo "Running seed:master"
               docker compose run --rm -T api npm run seed:master < /dev/null
             else
               echo "Skipping seed:master"
             fi
-            docker compose up -d --force-recreate api
-            docker compose build --no-cache web
-            docker compose up -d --force-recreate web
-            docker exec quizwell_web sh -lc 'if grep -R "localhost:3000" /usr/share/nginx/html; then exit 1; fi'
+
+            if [ "$SHOULD_BUILD_API" = "true" ] || [ "$SHOULD_SEED" = "true" ]; then
+              docker compose up -d --force-recreate api
+            else
+              echo "Skipping api recreate"
+            fi
+
+            if [ "$SHOULD_BUILD_WEB" = "true" ]; then
+              echo "Pruning old Docker cache before web build"
+              docker image prune -af || true
+              docker builder prune -af || true
+              docker compose build web
+              docker compose up -d --force-recreate web
+              docker exec quizwell_web sh -lc 'if grep -R "localhost:3000" /usr/share/nginx/html; then exit 1; fi'
+            else
+              echo "Skipping web build"
+            fi
 
             docker image prune -af || true
             docker builder prune -af || true
