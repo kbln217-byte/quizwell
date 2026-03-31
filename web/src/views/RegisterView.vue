@@ -20,8 +20,8 @@ async function submit() {
       return
     }
 
-    if (trimmedPassword.length < 8) {
-      message.value = "パスワードは8文字以上で入力してください"
+    if (trimmedPassword.length < 4) {
+      message.value = "パスワードは4文字以上で入力してください"
       return
     }
 
