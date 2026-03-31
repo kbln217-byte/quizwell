@@ -30,6 +30,8 @@ services:
   web:
     build:
       context: ./web
+      args:
+        VITE_API_URL: http://3.27.9.59:3000
     container_name: quizwell_web
     restart: always
     ports:
