@@ -8,12 +8,13 @@ datasource db {
 
 model User {
   id             Int                 @id @default(autoincrement())
-  name           String
   email          String              @unique
   passwordHash   String?
   answers        UserQuestionAnswer[]
   wrongQuestions WrongQuestion[]
   flags          QuestionFlag[]
+resetPasswordToken     String?
+resetPasswordExpiresAt DateTime?
 }
 
 model ExamSession {

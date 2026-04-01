@@ -21,3 +21,21 @@ export async function createUser(input: {
 
   return JSON.parse(text)
 }
+
+export async function forgotPassword(email: string) {
+  const res = await fetch("http://localhost:3000/users/auth/forgot-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  })
+
+  const data = await res.json()
+
+  if (!res.ok) {
+    throw new Error(data?.error?.message ?? "送信に失敗しました")
+  }
+
+  return data
+}
