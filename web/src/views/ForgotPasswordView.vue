@@ -43,8 +43,8 @@ console.log("forgot-password response:", data)
 </script>
 
 <template>
-  <main class="forgot-password-page">
-    <div class="forgot-password-card">
+  <main class="page-shell">
+    <section class="page-card form-card forgot-password-card">
       <h1 class="forgot-password-title">パスワードを忘れた方へ</h1>
       <p class="forgot-password-subtitle">
         登録したメールアドレスを入力してください。
@@ -56,14 +56,16 @@ console.log("forgot-password response:", data)
           id="email"
           v-model="email"
           type="email"
-          class="forgot-password-input"
+          class="input"
           placeholder="example@example.com"
           required
         />
 
-        <button type="submit" class="forgot-password-button" :disabled="loading">
-          {{ loading ? "送信中..." : "送信" }}
-        </button>
+        <div class="button-row">
+          <button type="submit" class="button button-primary" :disabled="loading">
+            {{ loading ? "送信中..." : "送信" }}
+          </button>
+        </div>
       </form>
 
       <p v-if="message" class="forgot-password-message">
@@ -73,7 +75,7 @@ console.log("forgot-password response:", data)
       <p v-if="errorMessage" class="forgot-password-error">
         {{ errorMessage }}
       </p>
-    </div>
+    </section>
   </main>
 </template>
 
