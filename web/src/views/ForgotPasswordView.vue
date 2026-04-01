@@ -24,7 +24,8 @@ async function handleSubmit() {
     })
 
     const data = await res.json()
-console.log("forgot-password response:", data)
+    console.log("forgot-password response:", data)
+
     if (!res.ok) {
       errorMessage.value =
         data?.error?.message ?? data?.message ?? "送信に失敗しました"
@@ -43,111 +44,105 @@ console.log("forgot-password response:", data)
 </script>
 
 <template>
-  <main class="page-shell forgot-password-page">
-    <section class="page-card form-card forgot-password-card">
-      <h1 class="forgot-password-title">パスワードを忘れた方へ</h1>
-      <p class="forgot-password-subtitle">
-        登録したメールアドレスを入力してください。
-      </p>
-
-      <form class="forgot-password-form" @submit.prevent="handleSubmit">
-        <label class="forgot-password-label" for="email">メールアドレス</label>
-        <input
-          id="email"
-          v-model="email"
-          type="email"
-          class="input forgot-password-input"
-          placeholder="example@example.com"
-          required
-        />
-
-        <div class="button-row">
-          <button type="submit" class="button button-primary forgot-password-button" :disabled="loading">
-            {{ loading ? "送信中..." : "送信" }}
-          </button>
+  
+  <main class="page-shell">
+    <section class="page-hero">
+      <div class="page-hero-content">
+        <div>
+          <p class="page-kicker">Quizwell</p>
+          <h1 class="page-title forgot-password-title">パスワードを忘れた方へ</h1>
+          <p class="page-subtitle">
+            登録したメールアドレスを入力してください。
+          </p>
         </div>
-      </form>
-
-      <p v-if="message" class="forgot-password-message">
-        {{ message }}
-      </p>
-
-      <p v-if="errorMessage" class="forgot-password-error">
-        {{ errorMessage }}
-      </p>
+      </div>
     </section>
+
+    <div class="page-grid forgot-password-grid">
+      <section class="page-card">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">再設定</p>
+            <h2>メールアドレスを送信</h2>
+            <p class="section-description">
+              登録済みのメールアドレス宛に、パスワード再設定の案内を送信します。
+            </p>
+          </div>
+        </div>
+
+        <form class="form-stack" @submit.prevent="handleSubmit">
+          <div class="field">
+            <span>メールアドレス</span>
+            <input
+              id="email"
+              v-model="email"
+              type="email"
+              placeholder="例: user@example.com"
+              class="input"
+              required
+            />
+          </div>
+
+          <div class="button-row">
+            <button
+              type="submit"
+              class="button button-primary"
+              :disabled="loading"
+            >
+              {{ loading ? "送信中..." : "送信" }}
+            </button>
+
+<router-link to="/change-password" class="button button-primary">
+  新しいパスワードを設定する
+</router-link>
+
+          <router-link to="/" class="button button-secondary">
+      ログイン画面に戻る
+    </router-link>
+
+  </div>
+</form>
+
+
+
+        <p v-if="message" class="message-banner message-banner-success">
+          {{ message }}
+        </p>
+
+        <p v-if="errorMessage" class="message-banner message-banner-warning">
+          {{ errorMessage }}
+        </p>
+
+      </section>
+
+      
+
+
+
+
+    </div>
   </main>
 </template>
 
-<style scoped>
-.forgot-password-page {
-  min-height: 100vh;
-  padding: 48px 24px;
-}
 
-.forgot-password-card {
-  max-width: 720px;
-  margin: 0 auto;
+
+<style scoped>
+.forgot-password-grid {
+  grid-template-columns: minmax(0, 720px);
+  justify-content: center;
 }
 
 .forgot-password-title {
-  margin: 0 0 24px;
-  font-size: 56px;
-  font-weight: 700;
-  color: #6b6793;
+  white-space: nowrap;
 }
 
-.forgot-password-subtitle {
-  margin: 0 0 40px;
-  font-size: 24px;
-  color: #7a76a3;
-}
+@media (max-width: 920px) {
+  .forgot-password-title {
+    white-space: normal;
+  }
 
-.forgot-password-form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.forgot-password-label {
-  font-size: 24px;
-  color: #7a76a3;
-}
-
-.forgot-password-input {
-  width: 100%;
-  max-width: 840px;
-  padding: 22px 24px;
-  font-size: 28px;
-  border: 1px solid #bdbdbd;
-  border-radius: 16px;
-  box-sizing: border-box;
-}
-
-.forgot-password-button {
-  width: 180px;
-  margin-top: 24px;
-  padding: 16px 24px;
-  font-size: 24px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
-
-.forgot-password-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.forgot-password-message {
-  margin-top: 40px;
-  font-size: 22px;
-  color: #7a76a3;
-}
-
-.forgot-password-error {
-  margin-top: 20px;
-  font-size: 22px;
-  color: #d64545;
+  .forgot-password-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

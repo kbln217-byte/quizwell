@@ -122,7 +122,6 @@ async function loadReviewQuestions() {
 async function loadQuestions() {
   try {
     const rawUserId = localStorage.getItem("userId")
-    // const rawUserId = 33
 
     if (!rawUserId) {
       questions.value = []
@@ -151,7 +150,6 @@ const sortedSessions = computed(() =>
     if (a.examYear !== b.examYear) {
       return b.examYear - a.examYear
     }
-
     return b.examRound - a.examRound
   })
 )
@@ -169,7 +167,10 @@ const activeMode = computed(() =>
 const activeSessionId = computed(() => {
   const sessionId = Number(route.query.sessionId)
 
-  if (Number.isInteger(sessionId) && sessions.value.some((session) => session.id === sessionId)) {
+  if (
+    Number.isInteger(sessionId) &&
+    sessions.value.some((session) => session.id === sessionId)
+  ) {
     return sessionId
   }
 
@@ -181,18 +182,9 @@ const activeSession = computed(() =>
 )
 
 const activeListTitle = computed(() => {
-  if (activeMode.value === "review") {
-    return "復習対象の問題"
-  }
-
-  if (activeMode.value === "random") {
-    return "ランダム問題"
-  }
-
-  if (activeSession.value) {
-    return `第${activeSession.value.examRound}回`
-  }
-
+  if (activeMode.value === "review") return "復習対象の問題"
+  if (activeMode.value === "random") return "ランダム問題"
+  if (activeSession.value) return `第${activeSession.value.examRound}回`
   return "問題一覧"
 })
 
@@ -237,8 +229,9 @@ function parseRandomQuestionIds(idsQuery: unknown) {
   return rawIds
     .split(",")
     .map((value) => Number(value))
-    .filter((value, index, array) =>
-      Number.isInteger(value) && value > 0 && array.indexOf(value) === index
+    .filter(
+      (value, index, array) =>
+        Number.isInteger(value) && value > 0 && array.indexOf(value) === index
     )
 }
 
@@ -260,7 +253,9 @@ const randomQuestionIds = computed(() => parseRandomQuestionIds(route.query.ids)
 const displayedQuestions = computed<QuestionListItem[]>(() => {
   if (activeMode.value === "review") {
     return reviewQuestions.value.map((question) => {
-      const originalQuestion = questions.value.find((item) => item.id === question.questionId)
+      const originalQuestion = questions.value.find(
+        (item) => item.id === question.questionId
+      )
 
       return {
         id: question.questionId,
@@ -346,7 +341,13 @@ function isFlagged(questionId: number) {
 }
 
 watch(
-  () => [route.query.mode, route.query.sessionId, route.query.ids, sortedSessions.value.length, questions.value.length],
+  () => [
+    route.query.mode,
+    route.query.sessionId,
+    route.query.ids,
+    sortedSessions.value.length,
+    questions.value.length,
+  ],
   async ([mode]) => {
     if (mode === "review") {
       await loadReviewQuestions()
@@ -383,12 +384,7 @@ watch(
 )
 
 onMounted(async () => {
-
-    await Promise.all([
-  loadSessions(),
-  loadQuestions(),
-  loadReviewCount(),
-])
+  await Promise.all([loadSessions(), loadQuestions(), loadReviewCount()])
 
   if (route.query.mode === "review") {
     await loadReviewQuestions()
@@ -418,17 +414,29 @@ onMounted(async () => {
   <main class="page-shell">
     <section class="page-hero">
       <div class="page-hero-content questions-hero-content">
-        <div>
+        <div class="questions-hero-main">
           <p class="page-kicker">Quizwell</p>
-          <h1 class="page-title">問題一覧</h1>
-          <p class="page-subtitle">回次または復習一覧を選んで問題に取り組めます。</p>
+
+          <div class="questions-title-row">
+            <h1 class="page-title questions-page-title">問題一覧</h1>
+          </div>
+
+          <p class="page-subtitle">
+            回次または復習一覧を選んで問題に取り組めます。
+          </p>
+
+          <div class="questions-action-row">
+            <router-link to="/change-password" class="button button-primary">
+              新しいパスワードを設定する
+            </router-link>
+
+            <button class="button button-secondary" @click="logout">
+              ログアウト
+            </button>
+          </div>
         </div>
 
         <div class="hero-side-actions">
-          <div class="hero-top-actions">
-            <button class="button button-secondary" @click="logout">ログアウト</button>
-          </div>
-
           <div class="selection-grid questions-selection-grid">
             <button
               v-for="session in sortedSessions"
@@ -441,7 +449,9 @@ onMounted(async () => {
             >
               <span class="selection-title">第{{ session.examRound }}回</span>
               <span class="selection-meta">{{ session.examYear }}年</span>
-              <span class="selection-count">{{ sessionQuestionCounts.get(session.id) ?? 0 }}問</span>
+              <span class="selection-count">
+                {{ sessionQuestionCounts.get(session.id) ?? 0 }}問
+              </span>
             </button>
 
             <button
@@ -465,7 +475,9 @@ onMounted(async () => {
             >
               <span class="selection-title">ランダム問題</span>
               <span class="selection-meta">最新200問から50問を出題</span>
-              <span class="selection-count">{{ Math.min(RANDOM_PICK_SIZE, questions.length) }}問</span>
+              <span class="selection-count">
+                {{ Math.min(RANDOM_PICK_SIZE, questions.length) }}問
+              </span>
             </button>
           </div>
         </div>
@@ -481,11 +493,7 @@ onMounted(async () => {
         </div>
 
         <div class="status-pill status-pill-soft">
-          {{
-            isListLoading
-              ? "読み込み中..."
-              : `全${displayedQuestions.length}問`
-          }}
+          {{ isListLoading ? "読み込み中..." : `全${displayedQuestions.length}問` }}
         </div>
       </div>
 
@@ -507,20 +515,22 @@ onMounted(async () => {
         <li v-for="q in displayedQuestions" :key="q.id">
           <button class="question-card" @click="goDetail(q.id)">
             <div class="question-card-top">
-<span class="question-index">
-  <span style="margin-right: 6px;">
-    {{ isFlagged(q.id) ? "★" : "☆" }}
-  </span>
+              <span class="question-index">
+                <span style="margin-right: 6px;">
+                  {{ isFlagged(q.id) ? "★" : "☆" }}
+                </span>
 
-  <template v-if="activeMode !== 'session' && q.examSessionId !== null">
-    {{ getSessionLabel(q.examSessionId) }} 問{{ q.questionNumber }}
-  </template>
-  <template v-else>
-    問{{ q.questionNumber }}
-  </template>
-</span>
+                <template v-if="activeMode !== 'session' && q.examSessionId !== null">
+                  {{ getSessionLabel(q.examSessionId) }} 問{{ q.questionNumber }}
+                </template>
+                <template v-else>
+                  問{{ q.questionNumber }}
+                </template>
+              </span>
+
               <span class="question-arrow">詳細へ</span>
             </div>
+
             <p class="question-text">{{ q.body }}</p>
           </button>
         </li>
