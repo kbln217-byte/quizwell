@@ -23,7 +23,7 @@ export async function createUser(input: {
 }
 
 export async function forgotPassword(email: string) {
-  const res = await fetch("http://localhost:3000/users/auth/forgot-password", {
+  const res = await fetch(buildApiUrl("/users/auth/forgot-password"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
