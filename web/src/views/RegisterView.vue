@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue"
 import { useRouter } from "vue-router"
+import { buildApiUrl } from "../api/client"
 
 const router = useRouter()
 const registerEmail = ref("")
@@ -11,14 +12,13 @@ const registerMessage = ref("")
 const loginMessage = ref("")
 const registerLoading = ref(false)
 const loginLoading = ref(false)
-const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 async function submitRegister() {
   registerMessage.value = ""
   registerLoading.value = true
 
   try {
-    const res = await fetch(`${BASE_URL}/users`, {
+    const res = await fetch(buildApiUrl("/users"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -51,7 +51,7 @@ async function submitLogin() {
   loginLoading.value = true
 
   try {
-    const res = await fetch(`${BASE_URL}/users/auth/login`, {
+    const res = await fetch(buildApiUrl("/users/auth/login"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
