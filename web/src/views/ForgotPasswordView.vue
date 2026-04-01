@@ -43,7 +43,7 @@ console.log("forgot-password response:", data)
 </script>
 
 <template>
-  <main class="page-shell">
+  <main class="page-shell forgot-password-page">
     <section class="page-card form-card forgot-password-card">
       <h1 class="forgot-password-title">パスワードを忘れた方へ</h1>
       <p class="forgot-password-subtitle">
@@ -56,13 +56,13 @@ console.log("forgot-password response:", data)
           id="email"
           v-model="email"
           type="email"
-          class="input"
+          class="input forgot-password-input"
           placeholder="example@example.com"
           required
         />
 
         <div class="button-row">
-          <button type="submit" class="button button-primary" :disabled="loading">
+          <button type="submit" class="button button-primary forgot-password-button" :disabled="loading">
             {{ loading ? "送信中..." : "送信" }}
           </button>
         </div>
