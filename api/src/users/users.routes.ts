@@ -39,7 +39,6 @@ usersRouter.post("/", async (req, res, next) => {
       email: email.trim().toLowerCase(),
       password: String(password).trim(),
     });
-
     res.status(result.isNewUser ? 201 : 200).json({ user: result.user });
   } catch (e) {
     next(e);
@@ -47,36 +46,36 @@ usersRouter.post("/", async (req, res, next) => {
 });
 
 // 一覧取得
-usersRouter.get("/", async (req, res, next) => {
-  try {
-    const users = await service.getAllUsers();
-    res.status(200).json({ users });
-  } catch (error) {
-    next(error);
-  }
-});
+// usersRouter.get("/", async (req, res, next) => {
+//   try {
+//     const users = await service.getAllUsers();
+//     res.status(200).json({ users });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 // 詳細取得
-usersRouter.get("/:id", async (req, res, next) => {
-  try {
-    const id = Number(req.params.id);
+// usersRouter.get("/:id", async (req, res, next) => {
+//   try {
+//     const id = Number(req.params.id);
 
-    if (!Number.isInteger(id) || id <= 0) {
-      res.status(400).json({
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "id must be a positive integer",
-        },
-      });
-      return;
-    }
+//     if (!Number.isInteger(id) || id <= 0) {
+//       res.status(400).json({
+//         error: {
+//           code: "VALIDATION_ERROR",
+//           message: "id must be a positive integer",
+//         },
+//       });
+//       return;
+//     }
 
-    const user = await service.getUserById(id);
-    res.status(200).json({ user });
-  } catch (error) {
-    next(error);
-  }
-});
+//     const user = await service.getUserById(id);
+//     res.status(200).json({ user });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 // 更新
 usersRouter.put("/:id", async (req, res, next) => {
@@ -171,6 +170,8 @@ usersRouter.post("/auth/login", async (req, res) => {
 
 usersRouter.post("/auth/forgot-password", async (req, res) => {
   try {
+    console.log("DEBUG route forgot-password start");
+
     const { email } = req.body ?? {}
 
     if (!email) {
@@ -187,8 +188,15 @@ usersRouter.post("/auth/forgot-password", async (req, res) => {
       String(email).trim().toLowerCase()
     )
 
+    console.log("DEBUG route result =", result)
+    console.log("DEBUG route before res.json")
+
     res.status(200).json(result)
+
+    console.log("DEBUG route after res.json")
   } catch (e: any) {
+    console.error("DEBUG route catch =", e)
+
     const status = e?.status || 500
     res.status(status).json({
       error: {

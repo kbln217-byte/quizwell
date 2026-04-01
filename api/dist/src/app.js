@@ -19,9 +19,9 @@ app.use("/sessions", examSessions_routes_1.sessionsRouter);
 app.use("/questions", questions_routes_1.questionsRouter);
 app.use("/answers", answer_routes_1.answerRouter);
 app.use("/review", review_routes_1.reviewRouter);
-app.get("/", (_req, res) => {
-    res.send("hello");
-});
+// app.get("/", (_req, res) => {
+//     res.send("hello");
+// });
 app.use((err, _req, res, _next) => {
     const status = err.status || 500;
     const code = err.code || "INTERNAL_SERVER_ERROR";

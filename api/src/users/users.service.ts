@@ -12,8 +12,6 @@ import {
 } from "./users.repo";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
-
 
 export type JwtPayload = {
   sub: number;
@@ -28,53 +26,6 @@ export class HttpError extends Error {
     this.status = status;
     this.code = code;
   }
-}
-
-function isSmtpConfigured() {
-  const host = config.smtp.host?.trim().toLowerCase();
-  if (!host) {
-    return false;
-  }
-  if (host === "example.com" || host.endsWith(".example.com")) {
-    return false;
-  }
-
-  return Boolean(
-    config.smtp.port > 0 &&
-      config.smtp.user &&
-      config.smtp.pass
-  );
-}
-
-function createSmtpTransport() {
-  return nodemailer.createTransport({
-    host: config.smtp.host,
-    port: config.smtp.port,
-    secure: config.smtp.secure,
-    auth: {
-      user: config.smtp.user,
-      pass: config.smtp.pass,
-    },
-  });
-}
-
-async function sendResetPasswordEmail(email: string, token: string) {
-  const resetUrl = `${config.frontendBaseUrl}/change-password?token=${token}`;
-  const transport = createSmtpTransport();
-
-  const message = {
-    from: config.smtp.from,
-    to: email,
-    subject: "Quizwell パスワード再設定のお知らせ",
-    text: `以下のリンクからパスワードを再設定してください:\n\n${resetUrl}\n\nこのリンクは30分で無効になります。`,
-    html: `
-      <p>以下のリンクからパスワードを再設定してください。</p>
-      <p><a href="${resetUrl}">${resetUrl}</a></p>
-      <p>このリンクは30分で無効になります。</p>
-    `,
-  };
-
-  await transport.sendMail(message);
 }
 
 export async function login(email: string, password: string) {
@@ -112,7 +63,11 @@ export async function register(input: {
 }) {
   const existingUser = await findByEmail(input.email);
   if (existingUser) {
-    throw new HttpError(400, "VALIDATION_ERROR", "すでに同じメールアドレスのユーザーが存在します");
+    throw new HttpError(
+      400,
+      "VALIDATION_ERROR",
+      "すでに同じメールアドレスのユーザーが存在します"
+    );
   }
 
   try {
@@ -132,7 +87,11 @@ export async function register(input: {
       e instanceof Prisma.PrismaClientKnownRequestError &&
       e.code === "P2002"
     ) {
-      throw new HttpError(400, "VALIDATION_ERROR", "このメールアドレスは既に登録されています");
+      throw new HttpError(
+        400,
+        "VALIDATION_ERROR",
+        "このメールアドレスは既に登録されています"
+      );
     }
 
     throw e;
@@ -166,6 +125,7 @@ export async function removeUser(id: number) {
     throw e;
   }
 }
+
 export async function putUserById(
   id: number,
   input: {
@@ -175,31 +135,42 @@ export async function putUserById(
   return putUser(id, input);
 }
 
-
 export async function changePassword(
   userId: number,
   currentPassword: string,
   newPassword: string
 ) {
+  if (String(newPassword).trim().length < 8) {
+    throw new HttpError(
+      400,
+      "VALIDATION_ERROR",
+      "新しいパスワードは8文字以上で入力してください"
+    );
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
+    select: {
+      id: true,
+      passwordHash: true,
+    },
   });
 
   if (!user) {
-    throw new Error("ユーザーが見つかりません");
+    throw new HttpError(404, "NOT_FOUND", "ユーザーが見つかりません");
   }
 
   if (!user.passwordHash) {
-    throw new Error("パスワードが設定されていません");
+    throw new HttpError(400, "NO_PASSWORD", "パスワードが設定されていません");
   }
 
   const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
 
   if (!isMatch) {
-    throw new Error("現在のパスワードが違います");
+    throw new HttpError(400, "AUTH_FAILED", "現在のパスワードが違います");
   }
 
-  const hash = await bcrypt.hash(newPassword, 10);
+  const hash = await bcrypt.hash(String(newPassword).trim(), 10);
 
   await prisma.user.update({
     where: { id: userId },
@@ -209,8 +180,9 @@ export async function changePassword(
   return { message: "パスワードを変更しました" };
 }
 
-
 export async function forgotPassword(email: string) {
+  console.log("DEBUG forgotPassword reached");
+
   const user = await findByEmail(email);
 
   if (!user) {
@@ -218,7 +190,7 @@ export async function forgotPassword(email: string) {
   }
 
   const resetToken = crypto.randomBytes(32).toString("hex");
-  const expires = new Date(Date.now() + 1000 * 60 * 30); // 30分後
+  const expires = new Date(Date.now() + 1000 * 60 * 30);
 
   await prisma.user.update({
     where: { id: user.id },
@@ -226,34 +198,34 @@ export async function forgotPassword(email: string) {
       resetPasswordToken: resetToken,
       resetPasswordExpiresAt: expires,
     },
+    select: { id: true },
   });
 
-  if (isSmtpConfigured()) {
-    await sendResetPasswordEmail(user.email, resetToken);
-    return {
-      message: "再設定用の案内を送信しました",
-    };
-  }
-
-  console.warn(
-    "SMTP settings are not configured. Returning reset token in response for development use."
-  );
+  console.log("DEBUG returning token only");
 
   return {
-    message:
-      "再設定用の案内を送信しました (SMTP未設定のためトークンを返します)",
+    message: "再設定用の案内を発行しました",
     token: resetToken,
   };
 }
 
 export async function resetPassword(token: string, password: string) {
   if (String(password).trim().length < 8) {
-    throw new HttpError(400, "VALIDATION_ERROR", "パスワードは8文字以上で入力してください");
+    throw new HttpError(
+      400,
+      "VALIDATION_ERROR",
+      "パスワードは8文字以上で入力してください"
+    );
   }
 
   const user = await prisma.user.findFirst({
     where: {
       resetPasswordToken: token,
+    },
+    select: {
+      id: true,
+      resetPasswordToken: true,
+      resetPasswordExpiresAt: true,
     },
   });
 
@@ -274,6 +246,7 @@ export async function resetPassword(token: string, password: string) {
       resetPasswordToken: null,
       resetPasswordExpiresAt: null,
     },
+    select: { id: true },
   });
 
   return {

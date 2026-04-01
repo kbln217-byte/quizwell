@@ -1,9 +1,21 @@
-import { Prisma, User } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 
-export async function findByEmail(email: string): Promise<User | null> {
+const publicUserSelect = {
+  id: true,
+  email: true,
+} satisfies Prisma.UserSelect;
+
+export async function findByEmail(email: string) {
   return prisma.user.findUnique({
     where: { email },
+    select: {
+      id: true,
+      email: true,
+      passwordHash: true,
+      resetPasswordToken: true,
+      resetPasswordExpiresAt: true,
+    },
   });
 }
 
@@ -13,12 +25,14 @@ export async function createUser(input: {
 }) {
   return prisma.user.create({
     data: input,
+    select: publicUserSelect,
   });
 }
 
 export async function findByIdUser(id: number) {
   return prisma.user.findUnique({
     where: { id },
+    select: publicUserSelect,
   });
 }
 
@@ -34,7 +48,6 @@ export async function listUsers(params: {
     ? {
         OR: [
           { email: { contains: q, mode: "insensitive" } },
-          { passwordHash: { contains: q, mode: "insensitive" } },
         ],
       }
     : {};
@@ -45,6 +58,7 @@ export async function listUsers(params: {
       skip,
       take: limit,
       orderBy: { id: "asc" },
+      select: publicUserSelect,
     }),
     prisma.user.count({ where }),
   ]);
@@ -55,6 +69,7 @@ export async function listUsers(params: {
 export async function findAllUsers() {
   return prisma.user.findMany({
     orderBy: { id: "asc" },
+    select: publicUserSelect,
   });
 }
 
@@ -69,12 +84,14 @@ export async function putUser(
     data: {
       email: input.email,
     },
+    select: publicUserSelect,
   });
 }
 
 export async function deleteUserById(id: number) {
   return prisma.user.delete({
     where: { id },
+    select: publicUserSelect,
   });
 }
 
@@ -89,6 +106,7 @@ export async function saveResetPasswordToken(
       resetPasswordToken: token,
       resetPasswordExpiresAt: expires,
     },
+    select: publicUserSelect,
   });
 }
 
@@ -96,6 +114,13 @@ export async function findByResetPasswordToken(token: string) {
   return prisma.user.findFirst({
     where: {
       resetPasswordToken: token,
+    },
+    select: {
+      id: true,
+      email: true,
+      resetPasswordToken: true,
+      resetPasswordExpiresAt: true,
+      passwordHash: true,
     },
   });
 }
@@ -111,5 +136,6 @@ export async function updatePasswordAndClearResetToken(
       resetPasswordToken: null,
       resetPasswordExpiresAt: null,
     },
+    select: publicUserSelect,
   });
 }

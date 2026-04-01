@@ -2,6 +2,7 @@
 import { ref } from "vue"
 import { useRouter } from "vue-router"
 import { buildApiUrl } from "../api/client"
+import { saveAuth } from "../utils/auth"
 
 const router = useRouter()
 const registerEmail = ref("")
@@ -37,6 +38,11 @@ async function submitRegister() {
     }
 
     registerMessage.value = "新規登録に成功しました"
+    saveAuth({
+      userId: data.user.id,
+      token: data.token,
+    })
+
     router.push("/questions")
   } catch (error) {
     console.error(error)
@@ -70,6 +76,11 @@ async function submitLogin() {
     }
 
     loginMessage.value = "ログイン成功"
+    saveAuth({
+      userId: data.user.id,
+      token: data.token,
+    })
+
     router.push("/questions")
   } catch (error) {
     console.error(error)

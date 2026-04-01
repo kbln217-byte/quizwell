@@ -1,9 +1,10 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { getQuestions } from "../api/questions"
 import { getReviewCount, getReviewQuestions } from "../api/review"
 import { getSessions } from "../api/sessions"
+import { getUserId } from "../utils/auth"
 
 type Question = {
   id: number
@@ -91,7 +92,7 @@ async function loadSessions() {
 }
 
 async function loadReviewQuestions() {
-  const rawUserId = localStorage.getItem("userId")
+  const rawUserId = getUserId()
 
   if (!rawUserId) {
     reviewQuestions.value = []
@@ -121,6 +122,7 @@ async function loadReviewQuestions() {
 async function loadQuestions() {
   try {
     const rawUserId = localStorage.getItem("userId")
+    // const rawUserId = 33
 
     if (!rawUserId) {
       questions.value = []
