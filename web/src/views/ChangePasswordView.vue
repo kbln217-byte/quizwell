@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { ref } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { computed, ref } from "vue"
+import { useRouter } from "vue-router"
 import { buildApiUrl } from "../api/client"
 
-const route = useRoute()
 const router = useRouter()
 
-const token =
-  typeof route.query.token === "string" ? route.query.token : ""
+const token = computed(() => localStorage.getItem("token") ?? "")
 
+const currentPassword = ref("")
 const newPassword = ref("")
 const confirmPassword = ref("")
 const message = ref("")
@@ -19,12 +18,12 @@ async function handleSubmit() {
   message.value = ""
   errorMessage.value = ""
 
-  if (!token) {
-    errorMessage.value = "無効なURLです"
+  if (!token.value) {
+    errorMessage.value = "ログイン情報がありません"
     return
   }
 
-  if (!newPassword.value || !confirmPassword.value) {
+  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
     errorMessage.value = "すべて入力してください"
     return
   }
@@ -34,38 +33,65 @@ async function handleSubmit() {
     return
   }
 
-  const res = await fetch(buildApiUrl("/users/auth/reset-password"), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      token,
-      password: newPassword.value,
-    }),
-  })
+  loading.value = true
 
-  const data = await res.json()
+  try {
+    const res = await fetch(buildApiUrl("/users/me/password"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
+      body: JSON.stringify({
+        currentPassword: currentPassword.value,
+        newPassword: newPassword.value,
+      }),
+    })
 
-  if (!res.ok) {
-    errorMessage.value =
-      data?.error?.message ?? data?.message ?? "パスワード再設定に失敗しました"
-    return
+    const data = await res.json()
+
+    if (!res.ok) {
+      errorMessage.value =
+        data?.error?.message ?? data?.message ?? "パスワード変更に失敗しました"
+      return
+    }
+
+    message.value = data?.message ?? "パスワードを変更しました"
+
+    currentPassword.value = ""
+    newPassword.value = ""
+    confirmPassword.value = ""
+
+    setTimeout(() => {
+      router.push("/questions")
+    }, 1500)
+  } catch (error) {
+    console.error(error)
+    errorMessage.value = "通信に失敗しました"
+  } finally {
+    loading.value = false
   }
-
-  message.value = data?.message ?? "パスワードを再設定しました"
-
-  setTimeout(() => {
-    router.push("/register")
-  }, 1500)
 }
+
+
 </script>
 
 <template>
   <main style="padding: 24px; max-width: 480px; margin: 0 auto;">
-    <h1>パスワード再設定</h1>
+    <h1>パスワード変更</h1>
 
     <form @submit.prevent="handleSubmit" style="display: grid; gap: 12px; margin-top: 16px;">
+      <div>
+        <label for="currentPassword">現在のパスワード</label>
+        <input
+          id="currentPassword"
+          v-model="currentPassword"
+          type="password"
+          style="display: block; width: 100%; padding: 8px; margin-top: 4px;"
+          required
+        />
+      </div>
+
       <div>
         <label for="newPassword">新しいパスワード</label>
         <input
@@ -88,12 +114,16 @@ async function handleSubmit() {
         />
       </div>
 
-      <button type="submit" :disabled="loading" style="padding: 10px 16px;">
-        {{ loading ? "変更中..." : "パスワードを再設定する" }}
+      <button type="submit" :disabled="loading" class="button button-primary">
+        {{ loading ? "変更中..." : "パスワードを変更する" }}
       </button>
 
       <p v-if="message" style="color: green;">{{ message }}</p>
       <p v-if="errorMessage" style="color: red;">{{ errorMessage }}</p>
+
+      <router-link to="/questions" class="button button-secondary">
+        メイン画面に戻る
+      </router-link>
     </form>
   </main>
 </template>

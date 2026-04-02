@@ -1,8 +1,7 @@
-// api/src/lib/mailer.ts
 import nodemailer from "nodemailer";
 import { config } from "../config";
 
-export const mailer = nodemailer.createTransport({
+export const transporter = nodemailer.createTransport({
   host: config.smtp.host,
   port: config.smtp.port,
   secure: config.smtp.secure,
@@ -12,23 +11,17 @@ export const mailer = nodemailer.createTransport({
   },
 });
 
-export async function sendResetPasswordMail(
-  to: string,
-  resetUrl: string
-) {
-  if (!config.smtp.from) {
-    throw new Error("SMTP_FROM が設定されていません");
-  }
-
-  await mailer.sendMail({
+export async function sendResetPasswordMail(to: string, resetUrl: string) {
+  await transporter.sendMail({
     from: config.smtp.from,
     to,
-    subject: "Quizwell パスワード再設定のお知らせ",
-    text: `以下のリンクからパスワードを再設定してください:\n\n${resetUrl}\n\nこのリンクは30分で無効になります。`,
+    subject: "【Quizwell】パスワード再設定のご案内",
+    text: `以下のURLからパスワードを再設定してください。\n\n${resetUrl}`,
     html: `
-      <p>以下のリンクからパスワードを再設定してください。</p>
+      <p>パスワード再設定のご案内です。</p>
+      <p>以下のリンクから再設定してください。</p>
       <p><a href="${resetUrl}">${resetUrl}</a></p>
-      <p>このリンクは30分で無効になります。</p>
+      <p>このURLの有効期限は30分です。</p>
     `,
   });
 }

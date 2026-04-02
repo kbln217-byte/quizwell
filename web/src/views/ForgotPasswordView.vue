@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue"
+import { useRouter } from "vue-router"
 import { buildApiUrl } from "../api/client"
+
+const router = useRouter()
 
 const email = ref("")
 const message = ref("")
@@ -32,8 +35,11 @@ async function handleSubmit() {
       return
     }
 
-    message.value = data?.message ?? "再設定用の案内を送信しました"
-    email.value = ""
+message.value = data?.message ?? "再設定用の案内を送信しました"
+email.value = ""
+router.push("/forgot-password/sent")
+
+
   } catch (error) {
     console.error(error)
     errorMessage.value = "通信に失敗しました"
@@ -44,7 +50,6 @@ async function handleSubmit() {
 </script>
 
 <template>
-  
   <main class="page-shell">
     <section class="page-hero">
       <div class="page-hero-content">
@@ -92,18 +97,11 @@ async function handleSubmit() {
               {{ loading ? "送信中..." : "送信" }}
             </button>
 
-<router-link to="/change-password" class="button button-primary">
-  新しいパスワードを設定する
-</router-link>
-
-          <router-link to="/" class="button button-secondary">
-      ログイン画面に戻る
-    </router-link>
-
-  </div>
-</form>
-
-
+            <router-link to="/" class="button button-secondary">
+              ログイン画面に戻る
+            </router-link>
+          </div>
+        </form>
 
         <p v-if="message" class="message-banner message-banner-success">
           {{ message }}
@@ -112,19 +110,10 @@ async function handleSubmit() {
         <p v-if="errorMessage" class="message-banner message-banner-warning">
           {{ errorMessage }}
         </p>
-
       </section>
-
-      
-
-
-
-
     </div>
   </main>
 </template>
-
-
 
 <style scoped>
 .forgot-password-grid {

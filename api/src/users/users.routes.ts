@@ -15,6 +15,7 @@ usersRouter.post("/", async (req, res, next) => {
     };
 
     const { email, password } = body;
+
     if (!email || !password) {
       res.status(400).json({
         error: {
@@ -36,46 +37,15 @@ usersRouter.post("/", async (req, res, next) => {
     }
 
     const result = await service.register({
-      email: email.trim().toLowerCase(),
+      email: String(email).trim().toLowerCase(),
       password: String(password).trim(),
     });
+
     res.status(result.isNewUser ? 201 : 200).json({ user: result.user });
   } catch (e) {
     next(e);
   }
 });
-
-// 一覧取得
-// usersRouter.get("/", async (req, res, next) => {
-//   try {
-//     const users = await service.getAllUsers();
-//     res.status(200).json({ users });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
-// 詳細取得
-// usersRouter.get("/:id", async (req, res, next) => {
-//   try {
-//     const id = Number(req.params.id);
-
-//     if (!Number.isInteger(id) || id <= 0) {
-//       res.status(400).json({
-//         error: {
-//           code: "VALIDATION_ERROR",
-//           message: "id must be a positive integer",
-//         },
-//       });
-//       return;
-//     }
-
-//     const user = await service.getUserById(id);
-//     res.status(200).json({ user });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
 
 // 更新
 usersRouter.put("/:id", async (req, res, next) => {
@@ -94,7 +64,7 @@ usersRouter.put("/:id", async (req, res, next) => {
 
     const { email, password } = req.body ?? {};
 
-    if (!email || !password ) {
+    if (!email || !password) {
       res.status(400).json({
         error: {
           code: "VALIDATION_ERROR",
@@ -105,8 +75,8 @@ usersRouter.put("/:id", async (req, res, next) => {
     }
 
     const user = await service.putUserById(id, {
-       email: String(email).trim(),
-  });
+      email: String(email).trim(),
+    });
 
     res.status(200).json({ user });
   } catch (error) {
@@ -136,10 +106,10 @@ usersRouter.delete("/:id", async (req, res, next) => {
   }
 });
 
-
+// ログイン
 usersRouter.post("/auth/login", async (req, res) => {
   try {
-    const { email, password } = req.body ?? {}
+    const { email, password } = req.body ?? {};
 
     if (!email || !password) {
       res.status(400).json({
@@ -147,32 +117,33 @@ usersRouter.post("/auth/login", async (req, res) => {
           code: "VALIDATION_ERROR",
           message: "email and password are required",
         },
-      })
-      return
+      });
+      return;
     }
 
     const result = await service.login(
       String(email).trim().toLowerCase(),
       String(password).trim()
-    )
+    );
 
-    res.status(200).json(result)
+    res.status(200).json(result);
   } catch (e: any) {
-    const status = e?.status || 500
+    const status = e?.status || 500;
     res.status(status).json({
       error: {
         code: e?.code || "LOGIN_FAILED",
         message: e?.message ?? "ログインに失敗しました",
       },
-    })
+    });
   }
-})
+});
 
+// パスワード忘れ
 usersRouter.post("/auth/forgot-password", async (req, res) => {
   try {
     console.log("DEBUG route forgot-password start");
 
-    const { email } = req.body ?? {}
+    const { email } = req.body ?? {};
 
     if (!email) {
       res.status(400).json({
@@ -180,36 +151,37 @@ usersRouter.post("/auth/forgot-password", async (req, res) => {
           code: "VALIDATION_ERROR",
           message: "email is required",
         },
-      })
-      return
+      });
+      return;
     }
 
     const result = await service.forgotPassword(
       String(email).trim().toLowerCase()
-    )
+    );
 
-    console.log("DEBUG route result =", result)
-    console.log("DEBUG route before res.json")
+    console.log("DEBUG route result =", result);
+    console.log("DEBUG route before res.json");
 
-    res.status(200).json(result)
+    res.status(200).json(result);
 
-    console.log("DEBUG route after res.json")
+    console.log("DEBUG route after res.json");
   } catch (e: any) {
-    console.error("DEBUG route catch =", e)
+    console.error("DEBUG route catch =", e);
 
-    const status = e?.status || 500
+    const status = e?.status || 500;
     res.status(status).json({
       error: {
         code: e?.code || "FORGOT_PASSWORD_FAILED",
         message: e?.message ?? "送信に失敗しました",
       },
-    })
+    });
   }
-})
+});
 
+// メール経由の再設定
 usersRouter.post("/auth/reset-password", async (req, res) => {
   try {
-    const { token, password } = req.body ?? {}
+    const { token, password } = req.body ?? {};
 
     if (!token || !password) {
       res.status(400).json({
@@ -217,36 +189,58 @@ usersRouter.post("/auth/reset-password", async (req, res) => {
           code: "VALIDATION_ERROR",
           message: "token and password are required",
         },
-      })
-      return
+      });
+      return;
     }
 
     const result = await service.resetPassword(
       String(token),
       String(password).trim()
-    )
+    );
 
-    res.status(200).json(result)
+    res.status(200).json(result);
   } catch (e: any) {
-    const status = e?.status || 500
+    const status = e?.status || 500;
     res.status(status).json({
       error: {
         code: e?.code || "RESET_PASSWORD_FAILED",
         message: e?.message ?? "パスワード再設定に失敗しました",
       },
-    })
+    });
   }
-})
+});
 
-usersRouter.post("/me/change-password", async (req, res) => {
+// ログイン中ユーザーのパスワード変更
+usersRouter.post("/me/password", async (req, res, next) => {
   try {
-    const userId = (req as any).user.id; // JWTから取得
-    const { currentPassword, newPassword } = req.body;
+    const authHeader = req.headers.authorization;
+    const userId = service.getUserIdFromAuthHeader(authHeader);
 
-    await service.changePassword(userId, currentPassword, newPassword);
+    const body = (req.body ?? {}) as {
+      currentPassword?: string;
+      newPassword?: string;
+    };
 
-    res.json({ message: "パスワードを変更しました" });
-  } catch (e: any) {
-    res.status(400).json({ message: e.message });
+    const { currentPassword, newPassword } = body;
+
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "currentPassword and newPassword are required",
+        },
+      });
+      return;
+    }
+
+    const result = await service.changePassword(
+      userId,
+      String(currentPassword),
+      String(newPassword)
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
   }
 });

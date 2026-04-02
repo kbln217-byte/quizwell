@@ -81,6 +81,9 @@ async function submitLogin() {
       token: data.token,
     })
 
+    localStorage.getItem("token")
+localStorage.setItem("userId", String(data.user.id))
+
     router.push("/questions")
   } catch (error) {
     console.error(error)
@@ -89,6 +92,8 @@ async function submitLogin() {
     loginLoading.value = false
   }
 }
+
+
 </script>
 
 <template>

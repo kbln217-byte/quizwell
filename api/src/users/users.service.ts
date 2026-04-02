@@ -12,6 +12,7 @@ import {
 } from "./users.repo";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { sendResetPasswordMail } from "../lib/mailer";
 
 export type JwtPayload = {
   sub: number;
@@ -140,14 +141,13 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string
 ) {
-  if (String(newPassword).trim().length < 8) {
+  if (String(newPassword).trim().length < 4) {
     throw new HttpError(
       400,
       "VALIDATION_ERROR",
-      "新しいパスワードは8文字以上で入力してください"
+      "新しいパスワードは4文字以上で入力してください"
     );
   }
-
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -185,8 +185,11 @@ export async function forgotPassword(email: string) {
 
   const user = await findByEmail(email);
 
+  // 本番では存在有無を外に出さない
   if (!user) {
-    throw new HttpError(404, "NOT_FOUND", "登録されていないメールアドレスです");
+    return {
+      message: "再設定用の案内を送信しました",
+    };
   }
 
   const resetToken = crypto.randomBytes(32).toString("hex");
@@ -201,20 +204,49 @@ export async function forgotPassword(email: string) {
     select: { id: true },
   });
 
-  console.log("DEBUG returning token only");
+  const resetUrl = `${config.frontendBaseUrl}/change-password?token=${resetToken}`;
+
+  await sendResetPasswordMail(user.email, resetUrl);
 
   return {
-    message: "再設定用の案内を発行しました",
-    token: resetToken,
+    message: "再設定用の案内を送信しました",
   };
 }
 
+export function getUserIdFromAuthHeader(authHeader?: string) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new HttpError(401, "UNAUTHORIZED", "認証が必要です");
+  }
+
+  const token = authHeader.slice(7);
+
+  let decoded: string | jwt.JwtPayload;
+
+  try {
+    decoded = jwt.verify(token, config.jwtSecret);
+  } catch {
+    throw new HttpError(401, "UNAUTHORIZED", "ログイン情報が無効です");
+  }
+
+  if (typeof decoded === "string") {
+    throw new HttpError(401, "UNAUTHORIZED", "ログイン情報が無効です");
+  }
+
+  const userId = Number(decoded.sub);
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    throw new HttpError(401, "UNAUTHORIZED", "ユーザー情報が不正です");
+  }
+
+  return userId;
+}
+
 export async function resetPassword(token: string, password: string) {
-  if (String(password).trim().length < 8) {
+  if (String(password).trim().length < 4) {
     throw new HttpError(
       400,
       "VALIDATION_ERROR",
-      "パスワードは8文字以上で入力してください"
+      "パスワードは4文字以上で入力してください"
     );
   }
 
@@ -246,7 +278,6 @@ export async function resetPassword(token: string, password: string) {
       resetPasswordToken: null,
       resetPasswordExpiresAt: null,
     },
-    select: { id: true },
   });
 
   return {

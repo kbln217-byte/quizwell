@@ -22,7 +22,7 @@ function getSafeApiBaseUrl() {
   // If the configured API is on the same hostname, prefer the current origin path
   // so that the frontend can use the local nginx reverse proxy instead of
   // calling the backend port directly.
-  if (configuredUrl.hostname === window.location.hostname) {
+  if (configuredUrl.origin  === window.location.origin) {
     return ""
   }
 

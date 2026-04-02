@@ -45,6 +45,7 @@ const reviewLoading = ref(false)
 const RANDOM_SOURCE_SIZE = 200
 const RANDOM_PICK_SIZE = 50
 
+
 function goDetail(id: number) {
   router.push({
     path: `/questions/${id}`,
