@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from "vue"
-import { useRouter } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 import { buildApiUrl } from "../api/client"
 
+const route = useRoute()
 const router = useRouter()
 
-const token = computed(() => localStorage.getItem("token") ?? "")
+const token = computed(() => String(route.query.token ?? ""))
 
-const currentPassword = ref("")
 const newPassword = ref("")
 const confirmPassword = ref("")
 const message = ref("")
@@ -19,11 +19,11 @@ async function handleSubmit() {
   errorMessage.value = ""
 
   if (!token.value) {
-    errorMessage.value = "ログイン情報がありません"
+    errorMessage.value = "再設定URLが無効です"
     return
   }
 
-  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
+  if (!newPassword.value || !confirmPassword.value) {
     errorMessage.value = "すべて入力してください"
     return
   }
@@ -36,15 +36,14 @@ async function handleSubmit() {
   loading.value = true
 
   try {
-    const res = await fetch(buildApiUrl("/users/me/password"), {
+    const res = await fetch(buildApiUrl("/users/auth/reset-password"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token.value}`,
       },
       body: JSON.stringify({
-        currentPassword: currentPassword.value,
-        newPassword: newPassword.value,
+        token: token.value,
+        password: newPassword.value,
       }),
     })
 
@@ -52,18 +51,17 @@ async function handleSubmit() {
 
     if (!res.ok) {
       errorMessage.value =
-        data?.error?.message ?? data?.message ?? "パスワード変更に失敗しました"
+        data?.error?.message ?? data?.message ?? "パスワード再設定に失敗しました"
       return
     }
 
-    message.value = data?.message ?? "パスワードを変更しました"
+    message.value = data?.message ?? "パスワードを再設定しました"
 
-    currentPassword.value = ""
     newPassword.value = ""
     confirmPassword.value = ""
 
     setTimeout(() => {
-      router.push("/questions")
+      router.push("/")
     }, 1500)
   } catch (error) {
     console.error(error)
@@ -72,58 +70,101 @@ async function handleSubmit() {
     loading.value = false
   }
 }
-
-
 </script>
 
 <template>
-  <main style="padding: 24px; max-width: 480px; margin: 0 auto;">
-    <h1>パスワード変更</h1>
-
-    <form @submit.prevent="handleSubmit" style="display: grid; gap: 12px; margin-top: 16px;">
-      <div>
-        <label for="currentPassword">現在のパスワード</label>
-        <input
-          id="currentPassword"
-          v-model="currentPassword"
-          type="password"
-          style="display: block; width: 100%; padding: 8px; margin-top: 4px;"
-          required
-        />
+  <main class="page-shell">
+    <section class="page-hero">
+      <div class="page-hero-content">
+        <div>
+          <p class="page-kicker">Quizwell</p>
+          <h1 class="page-title change-password-title">新しいパスワードを設定する</h1>
+          <p class="page-subtitle">
+            新しいパスワードを入力してください。
+          </p>
+        </div>
       </div>
+    </section>
 
-      <div>
-        <label for="newPassword">新しいパスワード</label>
-        <input
-          id="newPassword"
-          v-model="newPassword"
-          type="password"
-          style="display: block; width: 100%; padding: 8px; margin-top: 4px;"
-          required
-        />
-      </div>
+    <div class="page-grid change-password-grid">
+      <section class="page-card">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">再設定</p>
+            <h2>パスワード再設定</h2>
+            <p class="section-description">
+              新しいパスワードを設定すると、ログイン画面から再度ログインできます。
+            </p>
+          </div>
+        </div>
 
-      <div>
-        <label for="confirmPassword">新しいパスワード確認</label>
-        <input
-          id="confirmPassword"
-          v-model="confirmPassword"
-          type="password"
-          style="display: block; width: 100%; padding: 8px; margin-top: 4px;"
-          required
-        />
-      </div>
+        <form class="form-stack" @submit.prevent="handleSubmit">
+          <div class="field">
+            <span>新しいパスワード</span>
+            <input
+              id="newPassword"
+              v-model="newPassword"
+              type="password"
+              class="input"
+              required
+            />
+          </div>
 
-      <button type="submit" :disabled="loading" class="button button-primary">
-        {{ loading ? "変更中..." : "パスワードを変更する" }}
-      </button>
+          <div class="field">
+            <span>新しいパスワード確認</span>
+            <input
+              id="confirmPassword"
+              v-model="confirmPassword"
+              type="password"
+              class="input"
+              required
+            />
+          </div>
 
-      <p v-if="message" style="color: green;">{{ message }}</p>
-      <p v-if="errorMessage" style="color: red;">{{ errorMessage }}</p>
+          <div class="button-row">
+            <button
+              type="submit"
+              class="button button-primary"
+              :disabled="loading"
+            >
+              {{ loading ? "変更中..." : "パスワードを再設定する" }}
+            </button>
 
-      <router-link to="/questions" class="button button-secondary">
-        メイン画面に戻る
-      </router-link>
-    </form>
+            <router-link to="/" class="button button-secondary">
+              ログイン画面に戻る
+            </router-link>
+          </div>
+        </form>
+
+        <p v-if="message" class="message-banner message-banner-success">
+          {{ message }}
+        </p>
+
+        <p v-if="errorMessage" class="message-banner message-banner-warning">
+          {{ errorMessage }}
+        </p>
+      </section>
+    </div>
   </main>
 </template>
+
+<style scoped>
+.change-password-grid {
+  grid-template-columns: minmax(0, 720px);
+  justify-content: center;
+}
+
+.change-password-title {
+  white-space: nowrap;
+}
+
+@media (max-width: 920px) {
+  .change-password-title {
+    white-space: normal;
+  }
+
+  .change-password-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

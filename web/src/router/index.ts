@@ -4,6 +4,7 @@ import QuestionsView from '../views/QuestionsView.vue'
 import QuestionDetailView from '../views/QuestionDetailView.vue'
 import ForgotPasswordView from "../views/ForgotPasswordView.vue"
 import ChangePasswordView from "../views/ChangePasswordView.vue"
+import ForgotPasswordSentView from "../views/ForgotPasswordSentView.vue"
 
 const router = createRouter({
   history: createWebHistory(),
@@ -28,6 +29,12 @@ const router = createRouter({
   path: "/forgot-password",
   name: "forgot-password",
   component: ForgotPasswordView,
+},
+
+{
+  path: "/forgot-password/sent",
+  name: "forgot-password-sent",
+  component: ForgotPasswordSentView,
 },
 
 {
