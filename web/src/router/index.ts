@@ -39,8 +39,9 @@ const router = createRouter({
 
 {
   path: "/change-password",
+  name: "change-password",
   component: ChangePasswordView,
-}
+},
   ],
 })
 
