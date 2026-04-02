@@ -371,7 +371,7 @@ function goToList() {
           <h2>解説</h2>
         </div>
 
-        <p class="body-copy">
+        <p class="body-copy explanation-text">
           {{ question.explanation }}
         </p>
       </section>

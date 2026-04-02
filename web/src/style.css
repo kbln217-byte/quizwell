@@ -787,6 +787,10 @@ ul {
   }
 }
 
+.explanation-text {
+  white-space: pre-line;
+}
+
 @media (max-width: 720px) {
   .page-shell {
     width: min(1120px, calc(100% - 20px));
@@ -860,4 +864,6 @@ ul {
   .choice-pill {
     width: fit-content;
   }
+
+
 }
