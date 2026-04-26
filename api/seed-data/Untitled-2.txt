@@ -1,0 +1,2 @@
+git config --global user.name "今井若葉"
+git config --global user.email "kb.ln217@gmail.com"

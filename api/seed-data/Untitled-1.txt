@@ -1,0 +1,3 @@
+DATABASE_URL="postgresql://postgres:wi266980@localhost:5432/quiz_app_db?schema=public"
+
+$env:DATABASE_URL="postgresql://postgres:wi266980@localhost:5432/quiz_app_db?schema=public"
