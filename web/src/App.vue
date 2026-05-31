@@ -1,19 +1,8 @@
-<script setup lang="ts">
-const externalAppUrl = (port: number) => {
-  if (typeof window === "undefined") {
-    return "/";
-  }
-
-  const protocol = window.location.protocol || "http:";
-  return `${protocol}//${window.location.hostname}:${port}/`;
-};
-</script>
-
 <template>
   <nav class="app-launcher" aria-label="App launcher">
     <RouterLink to="/portfolio">Portfolio</RouterLink>
-    <a :href="externalAppUrl(8081)" target="_blank" rel="noreferrer">Cycle Food</a>
-    <a :href="externalAppUrl(8082)" target="_blank" rel="noreferrer">Moguratataki</a>
+    <a href="/cycle-food-app/" target="_blank" rel="noreferrer">Cycle Food</a>
+    <a href="/moguratataki/" target="_blank" rel="noreferrer">Moguratataki</a>
   </nav>
 
   <router-view />

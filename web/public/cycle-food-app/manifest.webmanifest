@@ -1,0 +1,21 @@
+{
+  "name": "Cycle Food",
+  "short_name": "Cycle Food",
+  "description": "周期に合わせた体調と食事のセルフケアを確認できるアプリです。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fffaf6",
+  "theme_color": "#f6cfc3",
+  "icons": [
+    {
+      "src": "/cycle-food-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "food", "lifestyle"],
+  "lang": "ja"
+}
