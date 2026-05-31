@@ -6,6 +6,7 @@ import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import ChangePasswordView from '../views/ChangePasswordView.vue'
 import ForgotPasswordSentView from '../views/ForgotPasswordSentView.vue'
 import PortfolioView from '../views/PortfolioView.vue'
+import CycleFoodView from '../views/CycleFoodView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -45,6 +46,11 @@ const router = createRouter({
       path: '/portfolio',
       name: 'portfolio',
       component: PortfolioView,
+    },
+    {
+      path: '/cycle-food',
+      name: 'cycle-food',
+      component: CycleFoodView,
     },
   ],
 })
