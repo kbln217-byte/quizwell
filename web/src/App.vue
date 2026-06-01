@@ -2,7 +2,7 @@
   <nav class="app-launcher" aria-label="App launcher">
     <RouterLink to="/portfolio">Portfolio</RouterLink>
     <a href="/cycle-food-app/" target="_blank" rel="noreferrer">Cycle Food</a>
-    <a href="/moguratataki/" target="_blank" rel="noreferrer">Moguratataki</a>
+    <a href="/bug-arcade/" target="_blank" rel="noreferrer">BUG ARCADE</a>
   </nav>
 
   <router-view />
