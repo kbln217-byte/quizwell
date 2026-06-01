@@ -2,19 +2,19 @@
 	<div class="portfolio-page">
 		<div class="hero">
 			<h1>Wakaba Imai Portfolio</h1>
-			<p class="subtitle">Vue / TypeScript を中心にしたWebアプリ開発（設計〜実装まで対応）</p>
+			<p class="subtitle">Vue / TypeScript を中心にしたWebアプリ開発・設計・実装までの制作記録</p>
 		</div>
 
 		<h2>チーム演習</h2>
 		<div class="works">
 			<div class="card" @click="openApp('http://35.77.89.102/login')">
 				<h3>勤怠管理システム</h3>
-				<img src="/attendance.png" />
+				<img src="/attendance.png" alt="勤怠管理システムの画面" />
 				<p>
-					従業員の打刻、休暇申請・承認、管理者機能を備えた勤怠管理アプリ<br />
-					（認証・権限管理・承認フローまで実装）
+					従業員の打刻、休暇申請、承認、管理機能を備えた勤怠管理アプリ。<br />
+					認証・権限管理・承認フローまで実装しました。
 				</p>
-				<p>Vue / TypeScript / Express / Prisma / PostgreSQL</p>
+				<p class="tech-stack">Vue / TypeScript / Express / Prisma / PostgreSQL</p>
 				<a href="http://35.77.89.102/login" target="_blank" @click.stop>サイトを見る</a>
 			</div>
 		</div>
@@ -23,23 +23,39 @@
 		<div class="works personal-works">
 			<div class="card" @click="openApp('http://3.27.9.59/register')">
 				<h3>キャリコン学科試験過去問集</h3>
-				<img src="/career-quiz.png" />
+				<img src="/career-quiz.png" alt="キャリコン学科試験過去問集の画面" />
 				<p>
-					キャリアコンサルタント試験の過去問学習を行えるWebアプリ<br />
-					（過去問回答・ご回答記録・ブックマーク機能まで実装）
+					キャリアコンサルタント試験の過去問学習を行えるWebアプリ。<br />
+					過去問回答、回答記録、ブックマーク機能まで実装しました。
 				</p>
-				<p>Vue / TypeScript</p>
+				<p class="tech-stack">Vue / TypeScript</p>
 				<a href="http://3.27.9.59/register" target="_blank" @click.stop>サイトを見る</a>
 			</div>
-			<div class="card" @click="openApp('/cycle-food')">
+
+			<div class="card" @click="openApp('/cycle-food-app/')">
 				<h3>今日、何食べる？</h3>
-				<img src="/cyclefood.png" />
+				<img src="/cyclefood.png" alt="今日、何食べる？の画面" />
 				<p>
-					女性の身体の周期に合わせて今日の食事アイデアを確認できるWebアプリ<br />
-					（カレンダー・体調記録・傾向チェックまで実装）
+					女性の身体の周期に合わせて、今日の食事アイデアを確認できるWebアプリ。<br />
+					カレンダー、体調記録、傾向チェックまで実装しました。
 				</p>
-				<p>Vue / TypeScript</p>
-				<a href="/cycle-food" target="_blank" @click.stop>サイトを見る</a>
+				<p class="tech-stack">Vue / TypeScript</p>
+				<a href="/cycle-food-app/" target="_blank" @click.stop>サイトを見る</a>
+			</div>
+
+			<div class="card bug-arcade-card" @click="openApp('/bug-arcade/')">
+				<h3>BUG ARCADE</h3>
+				<div class="bug-arcade-preview" aria-hidden="true">
+					<span class="arcade-kicker">BUG HUNTING</span>
+					<span class="arcade-title">BUG ARCADE</span>
+					<span class="arcade-screen">Bug Buster / slashBUG</span>
+				</div>
+				<p>
+					Vue + TypeScriptで制作したミニゲーム集。<br />
+					Bug Buster / slashBUG など、クリック操作で遊べるブラウザゲームを公開。
+				</p>
+				<p class="tech-stack">Vue / TypeScript / Vite / CSS Animation / SVG / localStorage / Web Audio API</p>
+				<a href="/bug-arcade/" target="_blank" @click.stop>サイトを見る</a>
 			</div>
 		</div>
 	</div>
@@ -57,10 +73,8 @@ const openApp = (url: string) => {
 	width: 100%;
 	padding: 56px 24px;
 	text-align: center;
-
 	background:
 		linear-gradient(rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.82)), url("/IMAI.png");
-
 	background-size: cover;
 	background-position: center;
 	background-repeat: no-repeat;
@@ -95,6 +109,13 @@ h2 {
 	margin-top: 24px;
 }
 
+.personal-works {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	width: min(1180px, 100%);
+	margin-inline: auto;
+}
+
 .card {
 	width: 100%;
 	max-width: 600px;
@@ -107,8 +128,7 @@ h2 {
 }
 
 .personal-works .card {
-	flex: 0 1 600px;
-	max-width: 600px;
+	max-width: none;
 	min-width: 0;
 }
 
@@ -117,56 +137,79 @@ h2 {
 	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
-.card img {
+.card img,
+.bug-arcade-preview {
 	width: 100%;
 	height: 220px;
-	object-fit: cover;
 	border-radius: 12px;
 	margin-bottom: 20px;
 }
 
-.cycle-food-preview {
-	width: 100%;
-	height: 220px;
+.card img {
+	object-fit: cover;
+}
+
+.bug-arcade-preview {
 	display: grid;
 	align-content: center;
 	justify-items: center;
 	gap: 12px;
-	margin-bottom: 20px;
-	border-radius: 12px;
-	background:
-		radial-gradient(circle at 20% 22%, rgba(255, 255, 255, 0.85), transparent 24%),
-		radial-gradient(circle at 80% 28%, rgba(189, 236, 225, 0.78), transparent 28%),
-		linear-gradient(135deg, #fff4fb 0%, #eef8ff 48%, #f6fff9 100%);
-	color: #685f86;
+	position: relative;
 	overflow: hidden;
+	border: 3px solid #18302c;
+	background:
+		radial-gradient(circle at 74% 20%, rgba(255, 206, 74, 0.9), transparent 24%),
+		radial-gradient(circle at 18% 78%, rgba(123, 217, 182, 0.72), transparent 22%),
+		linear-gradient(135deg, #14192d, #223f7a 52%, #0f8f7f);
+	color: #fffef5;
+	box-shadow: inset 0 -10px 0 rgba(24, 48, 44, 0.3);
 }
 
-.preview-kicker {
-	color: #8193e8;
+.bug-arcade-preview::before {
+	content: "";
+	position: absolute;
+	inset: 18px;
+	border: 2px dashed rgba(255, 255, 255, 0.42);
+	border-radius: 10px;
+}
+
+.arcade-kicker,
+.arcade-title,
+.arcade-screen {
+	position: relative;
+}
+
+.arcade-kicker {
+	color: #ffce4a;
 	font-size: 12px;
-	font-weight: 700;
+	font-weight: 900;
 	letter-spacing: 0.18em;
-	text-transform: uppercase;
 }
 
-.preview-title {
-	font-size: 22px;
-	font-weight: 800;
+.arcade-title {
+	font-size: clamp(28px, 4vw, 38px);
+	font-weight: 900;
+	line-height: 1;
+	text-shadow: 4px 4px 0 rgba(24, 48, 44, 0.9);
 }
 
-.preview-pill {
+.arcade-screen {
 	padding: 8px 14px;
+	border: 2px solid rgba(255, 255, 255, 0.72);
 	border-radius: 999px;
-	background: rgba(255, 255, 255, 0.72);
-	color: #786d97;
+	background: rgba(255, 255, 255, 0.14);
 	font-size: 13px;
-	font-weight: 700;
+	font-weight: 800;
 }
 
 .card p {
 	font-size: 15px;
 	line-height: 1.8;
+}
+
+.tech-stack {
+	color: #4f5f78;
+	font-weight: 700;
 }
 
 .card a {
@@ -180,10 +223,23 @@ h2 {
 	text-decoration: none;
 }
 
+.bug-arcade-card a {
+	background: #18302c;
+}
+
+@media (max-width: 1000px) {
+	.personal-works {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
 @media (max-width: 720px) {
-	.personal-works .card {
-		flex-basis: 100%;
-		max-width: 600px;
+	.portfolio-page {
+		padding: 40px 16px;
+	}
+
+	.personal-works {
+		grid-template-columns: 1fr;
 	}
 }
 </style>
