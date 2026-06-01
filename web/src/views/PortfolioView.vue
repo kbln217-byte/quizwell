@@ -52,9 +52,9 @@
 				</div>
 				<p>
 					Vue + TypeScriptで制作したミニゲーム集。<br />
-					Bug Buster / slashBUG など、クリック操作で遊べるブラウザゲームを公開。
+					クリック操作で遊べるブラウザゲームを公開。
 				</p>
-				<p class="tech-stack">Vue / TypeScript / Vite / CSS Animation / SVG / localStorage / Web Audio API</p>
+				<p class="tech-stack">Vue / TypeScript / Vite / SVG</p>
 				<a href="/bug-arcade/" target="_blank" @click.stop>サイトを見る</a>
 			</div>
 		</div>
@@ -120,6 +120,8 @@ h2 {
 	width: 100%;
 	max-width: 600px;
 	padding: 24px;
+	display: flex;
+	flex-direction: column;
 	border-radius: 16px;
 	background: #fff;
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -153,7 +155,7 @@ h2 {
 	display: grid;
 	align-content: center;
 	justify-items: center;
-	gap: 12px;
+	gap: 10px;
 	position: relative;
 	overflow: hidden;
 	border: 3px solid #18302c;
@@ -187,7 +189,7 @@ h2 {
 }
 
 .arcade-title {
-	font-size: clamp(28px, 4vw, 38px);
+	font-size: clamp(26px, 3vw, 34px);
 	font-weight: 900;
 	line-height: 1;
 	text-shadow: 4px 4px 0 rgba(24, 48, 44, 0.9);
@@ -214,17 +216,14 @@ h2 {
 
 .card a {
 	display: inline-block;
-	margin-top: 16px;
+	align-self: center;
+	margin-top: auto;
 	padding: 10px 18px;
 	border-radius: 999px;
 	background: #2563eb;
 	color: #fff;
 	font-weight: bold;
 	text-decoration: none;
-}
-
-.bug-arcade-card a {
-	background: #18302c;
 }
 
 @media (max-width: 1000px) {
