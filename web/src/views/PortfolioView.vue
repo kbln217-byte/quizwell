@@ -126,8 +126,9 @@ h2 {
 
 .personal-works {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	width: min(1180px, 100%);
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-auto-rows: 1fr;
+	width: min(840px, 100%);
 	margin-inline: auto;
 }
 
@@ -147,6 +148,7 @@ h2 {
 .personal-works .card {
 	max-width: none;
 	min-width: 0;
+	height: 100%;
 }
 
 .card:hover {
