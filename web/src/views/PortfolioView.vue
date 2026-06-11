@@ -32,6 +32,21 @@
 				<a href="http://3.27.9.59/register" target="_blank" @click.stop>サイトを見る</a>
 			</div>
 
+			<div class="card career-pass-card" @click="openApp('http://127.0.0.1:5173/register')">
+				<h3>キャリコンPASS</h3>
+				<div class="career-pass-preview" aria-hidden="true">
+					<span class="career-pass-kicker">CAREER CONSULTANT</span>
+					<span class="career-pass-title">キャリコンPASS</span>
+					<span class="career-pass-screen">過去問 / 復習 / 弱点対策</span>
+				</div>
+				<p>
+					キャリアコンサルタント試験の学習を、登録から問題演習、復習まで進められるWebアプリ。<br />
+					quizwellをベースに、キャリコン学習向けの新しい環境として構築しました。
+				</p>
+				<p class="tech-stack">Vue / TypeScript / Express / Prisma / PostgreSQL</p>
+				<a href="http://127.0.0.1:5173/register" target="_blank" @click.stop>サイトを見る</a>
+			</div>
+
 			<div class="card" @click="openApp('/cycle-food-app/')">
 				<h3>今日、何食べる？</h3>
 				<img src="/cyclefood.png" alt="今日、何食べる？の画面" />
@@ -140,7 +155,8 @@ h2 {
 }
 
 .card img,
-.bug-arcade-preview {
+.bug-arcade-preview,
+.career-pass-preview {
 	width: 100%;
 	height: 220px;
 	border-radius: 12px;
@@ -200,6 +216,56 @@ h2 {
 	border: 2px solid rgba(255, 255, 255, 0.72);
 	border-radius: 999px;
 	background: rgba(255, 255, 255, 0.14);
+	font-size: 13px;
+	font-weight: 800;
+}
+
+.career-pass-preview {
+	display: grid;
+	align-content: center;
+	justify-items: center;
+	gap: 12px;
+	position: relative;
+	overflow: hidden;
+	border: 1px solid #d8e2f2;
+	background:
+		linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(238, 247, 255, 0.82)),
+		linear-gradient(135deg, #1768ac, #16a085 58%, #f2c94c);
+	color: #102033;
+}
+
+.career-pass-preview::before {
+	content: "";
+	position: absolute;
+	inset: 18px;
+	border: 1px solid rgba(23, 104, 172, 0.26);
+	border-radius: 10px;
+}
+
+.career-pass-kicker,
+.career-pass-title,
+.career-pass-screen {
+	position: relative;
+}
+
+.career-pass-kicker {
+	color: #1768ac;
+	font-size: 12px;
+	font-weight: 900;
+	letter-spacing: 0.14em;
+}
+
+.career-pass-title {
+	font-size: clamp(24px, 3vw, 32px);
+	font-weight: 900;
+	line-height: 1.15;
+}
+
+.career-pass-screen {
+	padding: 8px 14px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.7);
+	color: #24605a;
 	font-size: 13px;
 	font-weight: 800;
 }
