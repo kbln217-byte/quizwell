@@ -32,7 +32,7 @@
 				<a href="http://3.27.9.59/register" target="_blank" @click.stop>サイトを見る</a>
 			</div>
 
-			<div class="card career-pass-card" @click="openApp('http://127.0.0.1:5173/register')">
+			<div class="card career-pass-card" @click="openApp('http://3.27.9.59/register')">
 				<h3>キャリコンPASS</h3>
 				<div class="career-pass-preview" aria-hidden="true">
 					<span class="career-pass-kicker">CAREER CONSULTANT</span>
@@ -44,7 +44,7 @@
 					quizwellをベースに、キャリコン学習向けの新しい環境として構築しました。
 				</p>
 				<p class="tech-stack">Vue / TypeScript / Express / Prisma / PostgreSQL</p>
-				<a href="http://127.0.0.1:5173/register" target="_blank" @click.stop>サイトを見る</a>
+				<a href="http://3.27.9.59/register" target="_blank" @click.stop>サイトを見る</a>
 			</div>
 
 			<div class="card" @click="openApp('/cycle-food-app/')">
